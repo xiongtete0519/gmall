@@ -2,12 +2,14 @@ package com.atguigu.gmall.product.service.impl;
 
 import com.atguigu.gmall.model.product.BaseCategoryTrademark;
 import com.atguigu.gmall.model.product.BaseTrademark;
+import com.atguigu.gmall.model.product.CategoryTrademarkVo;
 import com.atguigu.gmall.product.mapper.BaseTrademarkMapper;
 import com.atguigu.gmall.product.service.BaseCategoryTrademarkService;
 import com.atguigu.gmall.product.mapper.BaseCategoryTrademarkMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -18,7 +20,7 @@ import java.util.stream.Collectors;
 
 @Service
 @SuppressWarnings("all")
-public class BaseCategoryTrademarkServiceImpl implements BaseCategoryTrademarkService {
+public class BaseCategoryTrademarkServiceImpl extends ServiceImpl<BaseCategoryTrademarkMapper,BaseCategoryTrademark> implements BaseCategoryTrademarkService {
 
     //品牌表
     @Autowired
@@ -98,5 +100,22 @@ public class BaseCategoryTrademarkServiceImpl implements BaseCategoryTrademarkSe
             result = baseTrademarkMapper.selectList(wrapper1);
         }
         return result;
+    }
+
+    //保存分类和品牌关联
+    @Override
+    public void save(CategoryTrademarkVo categoryTrademarkVo) {
+
+        //获取品牌id集合
+        List<Long> trademarkIdList = categoryTrademarkVo.getTrademarkIdList();
+        //遍历处理，封装成对象
+        List<BaseCategoryTrademark> baseCategoryTrademarkList = trademarkIdList.stream().map(trademarkId -> {
+            //创建分类品牌对象
+            BaseCategoryTrademark baseCategoryTrademark = new BaseCategoryTrademark();
+            baseCategoryTrademark.setCategory3Id(categoryTrademarkVo.getCategory3Id());
+            baseCategoryTrademark.setTrademarkId(trademarkId);
+            return baseCategoryTrademark;
+        }).collect(Collectors.toList());
+        this.saveBatch(baseCategoryTrademarkList);
     }
 }

@@ -2,6 +2,7 @@ package com.atguigu.gmall.product.controller;
 
 import com.atguigu.gmall.common.result.Result;
 import com.atguigu.gmall.model.product.BaseTrademark;
+import com.atguigu.gmall.model.product.CategoryTrademarkVo;
 import com.atguigu.gmall.product.service.BaseCategoryTrademarkService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -16,6 +17,13 @@ public class BaseCategoryTradeMarkController {
 
     @Autowired
     private BaseCategoryTrademarkService baseCategoryTrademarkService;
+
+    @ApiOperation("保存分类和品牌关联")
+    @PostMapping("save")
+    public Result save(@RequestBody CategoryTrademarkVo categoryTrademarkVo){
+        baseCategoryTrademarkService.save(categoryTrademarkVo);
+        return Result.ok();
+    }
 
     @ApiOperation("根据category3Id获取可选品牌列表")
     @GetMapping("/findCurrentTrademarkList/{category3Id}")
