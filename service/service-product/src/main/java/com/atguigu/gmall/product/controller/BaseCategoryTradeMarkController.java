@@ -17,6 +17,14 @@ public class BaseCategoryTradeMarkController {
     @Autowired
     private BaseCategoryTrademarkService baseCategoryTrademarkService;
 
+    @ApiOperation("根据category3Id获取可选品牌列表")
+    @GetMapping("/findCurrentTrademarkList/{category3Id}")
+    public Result findCurrentTrademarkList(@PathVariable Long category3Id){
+        List<BaseTrademark> baseTrademarkList=baseCategoryTrademarkService.findCurrentTrademarkList(category3Id);
+        return Result.ok(baseTrademarkList);
+    }
+
+
     @ApiOperation("根据category3Id获取品牌列表(多对多查询)")
     @GetMapping("/findTrademarkList/{category3Id}")
     public Result findTrademarkList(@PathVariable Long category3Id){

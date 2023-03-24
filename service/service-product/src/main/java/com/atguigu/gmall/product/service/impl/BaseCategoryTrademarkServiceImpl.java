@@ -71,4 +71,32 @@ public class BaseCategoryTrademarkServiceImpl implements BaseCategoryTrademarkSe
         //删除关联
         baseCategoryTrademarkMapper.delete(wrapper);
     }
+
+    //根据category3Id获取可选品牌列表
+    @Override
+    public List<BaseTrademark> findCurrentTrademarkList(Long category3Id) {
+        List<BaseTrademark> result=new ArrayList<>();
+
+        LambdaQueryWrapper<BaseCategoryTrademark> wrapper = Wrappers.lambdaQuery();
+        wrapper.eq(BaseCategoryTrademark::getCategory3Id,category3Id);
+        List<BaseCategoryTrademark> baseCategoryTrademarkList = baseCategoryTrademarkMapper.selectList(wrapper);
+        if(!CollectionUtils.isEmpty(baseCategoryTrademarkList)){
+            //获取当前分类已经关联的品牌id
+            List<Long> tradeMarkIdList= baseCategoryTrademarkList.stream()
+                    .map(x -> x.getTrademarkId())
+                    .collect(Collectors.toList());
+//            //查询所有品牌
+//            List<BaseTrademark> baseTrademarkList = baseTrademarkMapper.selectList(null);
+//            //遍历处理
+//            result = baseTrademarkList.stream().filter(baseTrademark -> {
+//                return !tradeMarkIdList.contains(baseTrademark.getId());
+//            }).collect(Collectors.toList());
+            //创建条件对象
+            LambdaQueryWrapper<BaseTrademark> wrapper1 = Wrappers.lambdaQuery();
+            wrapper1.notIn(BaseTrademark::getId,tradeMarkIdList);
+            //条件查询品牌列表
+            result = baseTrademarkMapper.selectList(wrapper1);
+        }
+        return result;
+    }
 }
