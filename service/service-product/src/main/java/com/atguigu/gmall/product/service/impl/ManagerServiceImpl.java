@@ -37,6 +37,9 @@ public class ManagerServiceImpl implements ManagerService {
     @Autowired
     private SpuInfoMapper spuInfoMapper;
 
+    @Autowired
+    private BaseSaleAttrMapper baseSaleAttrMapper;
+
     //查询一级分类
     @Override
     public List<BaseCategory1> getCategory1() {
@@ -140,6 +143,12 @@ public class ManagerServiceImpl implements ManagerService {
         wrapper.eq(SpuInfo::getCategory3Id,spuInfo.getCategory3Id());
 
         return spuInfoMapper.selectPage(infoPage,wrapper);
+    }
+
+    //获取销售属性
+    @Override
+    public List<BaseSaleAttr> baseSaleAttrList() {
+        return baseSaleAttrMapper.selectList(null);
     }
 
     //根据属性id查询属性值集合

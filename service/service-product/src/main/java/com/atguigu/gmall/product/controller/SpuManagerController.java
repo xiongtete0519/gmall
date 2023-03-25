@@ -1,6 +1,7 @@
 package com.atguigu.gmall.product.controller;
 
 import com.atguigu.gmall.common.result.Result;
+import com.atguigu.gmall.model.product.BaseSaleAttr;
 import com.atguigu.gmall.model.product.SpuInfo;
 import com.atguigu.gmall.product.service.ManagerService;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -12,6 +13,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
 @Api(tags = "SPU")
 @RestController
 @RequestMapping("/admin/product")
@@ -32,6 +36,13 @@ public class SpuManagerController {
         IPage<SpuInfo> infoIPage=managerService.getSpuInfoPage(infoPage,spuInfo);
 
         return Result.ok(infoIPage);
+    }
+
+    @ApiOperation("获取销售属性")
+    @GetMapping("/baseSaleAttrList")
+    public Result baseSaleAttrList(){
+        List<BaseSaleAttr> baseSaleAttrList=managerService.baseSaleAttrList();
+        return Result.ok(baseSaleAttrList);
     }
 
 

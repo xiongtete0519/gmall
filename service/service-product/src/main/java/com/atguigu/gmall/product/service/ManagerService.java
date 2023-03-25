@@ -27,4 +27,7 @@ public interface ManagerService {
 
     //根据三级分类分页查询spu列表
     IPage<SpuInfo> getSpuInfoPage(Page<SpuInfo> infoPage, SpuInfo spuInfo);
+
+    //获取销售属性
+    List<BaseSaleAttr> baseSaleAttrList();
 }
