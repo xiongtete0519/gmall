@@ -36,4 +36,7 @@ public interface ManagerService {
 
     //根据spuid查询销售属性和销售属性值集合
     List<SpuSaleAttr> spuSaleAttrList(Long spuId);
+
+    //根据spuId查询图片列表
+    List<SpuImage> spuImageList(Long spuId);
 }

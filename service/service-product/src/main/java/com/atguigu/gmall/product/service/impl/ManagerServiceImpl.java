@@ -234,6 +234,16 @@ public class ManagerServiceImpl implements ManagerService {
 
     }
 
+    //根据spuId查询图片列表
+    @Override
+    public List<SpuImage> spuImageList(Long spuId) {
+        //创建条件对象
+        LambdaQueryWrapper<SpuImage> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SpuImage::getSpuId,spuId);
+        List<SpuImage> spuImageList = spuImageMapper.selectList(wrapper);
+        return spuImageList;
+    }
+
     //根据属性id查询属性值集合
     private List<BaseAttrValue> getAttrValueList(Long attrId) {
         LambdaQueryWrapper<BaseAttrValue> wrapper =
