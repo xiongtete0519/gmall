@@ -226,6 +226,14 @@ public class ManagerServiceImpl implements ManagerService {
 
     }
 
+    //根据spuId查询销售属性和销售属性值集合
+    @Override
+    public List<SpuSaleAttr> spuSaleAttrList(Long spuId) {
+        List<SpuSaleAttr> spuSaleAttrList=spuSaleAttrMapper.selectSpuSaleAttrList(spuId);
+        return spuSaleAttrList;
+
+    }
+
     //根据属性id查询属性值集合
     private List<BaseAttrValue> getAttrValueList(Long attrId) {
         LambdaQueryWrapper<BaseAttrValue> wrapper =
