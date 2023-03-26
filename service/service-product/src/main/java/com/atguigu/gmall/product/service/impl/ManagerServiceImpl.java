@@ -40,6 +40,18 @@ public class ManagerServiceImpl implements ManagerService {
     @Autowired
     private BaseSaleAttrMapper baseSaleAttrMapper;
 
+    @Autowired
+    private SpuSaleAttrMapper spuSaleAttrMapper;
+
+    @Autowired
+    private SpuSaleAttrValueMapper spuSaleAttrValueMapper;
+
+    @Autowired
+    private SpuImageMapper spuImageMapper;
+
+    @Autowired
+    private SpuPosterMapper spuPosterMapper;
+
     //查询一级分类
     @Override
     public List<BaseCategory1> getCategory1() {
@@ -149,6 +161,69 @@ public class ManagerServiceImpl implements ManagerService {
     @Override
     public List<BaseSaleAttr> baseSaleAttrList() {
         return baseSaleAttrMapper.selectList(null);
+    }
+
+    /**
+     * 保存SPU，添加事务
+     * spuInfo涉及到的表
+     * spu_info 基本信息表
+     * spu_image    图片表
+     * spu_poster   海报表
+     * spu_sale_attr 销售属性表
+     * spu_sale_attr_value 销售属性值表
+     * @param spuInfo
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void saveSpuInfo(SpuInfo spuInfo) {
+         //保存spu信息
+        spuInfoMapper.insert(spuInfo);
+        //保存图片
+        List<SpuImage> spuImageList = spuInfo.getSpuImageList();
+        //判断
+        if(!CollectionUtils.isEmpty(spuImageList)){
+            for (SpuImage spuImage : spuImageList) {
+                //设置spuId
+                spuImage.setSpuId(spuInfo.getId());
+                //保存图片到数据库
+                spuImageMapper.insert(spuImage);
+            }
+        }
+        //保存海报
+        List<SpuPoster> spuPosterList = spuInfo.getSpuPosterList();
+        if(!CollectionUtils.isEmpty(spuPosterList)){
+            for (SpuPoster spuPoster : spuPosterList) {
+                //设置spuId
+                spuPoster.setSpuId(spuInfo.getId());
+                //保存
+                spuPosterMapper.insert(spuPoster);
+            }
+        }
+        //保存销售属性
+        List<SpuSaleAttr> spuSaleAttrList = spuInfo.getSpuSaleAttrList();
+        if(!CollectionUtils.isEmpty(spuSaleAttrList)){
+            //保存销售属性
+            for (SpuSaleAttr spuSaleAttr : spuSaleAttrList) {
+                //设置spuId
+                spuSaleAttr.setSpuId(spuInfo.getId());
+                //保存
+                spuSaleAttrMapper.insert(spuSaleAttr);
+                //获取销售属性值集合
+                List<SpuSaleAttrValue> spuSaleAttrValueList = spuSaleAttr.getSpuSaleAttrValueList();
+                if(!CollectionUtils.isEmpty(spuSaleAttrValueList)){
+                    //保存销售属性值
+                    for (SpuSaleAttrValue spuSaleAttrValue : spuSaleAttrValueList) {
+                        //设置spuId
+                        spuSaleAttrValue.setSpuId(spuInfo.getId());
+                        //设置销售属性名称
+                        spuSaleAttrValue.setSaleAttrName(spuSaleAttr.getSaleAttrName());
+                        //保存销售属性值
+                        spuSaleAttrValueMapper.insert(spuSaleAttrValue);
+                    }
+                }
+            }
+        }
+
     }
 
     //根据属性id查询属性值集合

@@ -30,4 +30,7 @@ public interface ManagerService {
 
     //获取销售属性
     List<BaseSaleAttr> baseSaleAttrList();
+
+    //保存SPU
+    void saveSpuInfo(SpuInfo spuInfo);
 }

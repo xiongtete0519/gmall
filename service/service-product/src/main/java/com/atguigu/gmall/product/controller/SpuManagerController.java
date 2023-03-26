@@ -9,10 +9,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -23,6 +20,15 @@ public class SpuManagerController {
 
     @Autowired
     private ManagerService managerService;
+
+
+    @ApiOperation("保存SPU")
+    @PostMapping("/saveSpuInfo")
+    public Result saveSpuInfo(@RequestBody SpuInfo spuInfo){
+        managerService.saveSpuInfo(spuInfo);
+        return Result.ok();
+    }
+
 
     @ApiOperation("根据三级分类分页查询spu列表")
     @GetMapping("{page}/{limit}")
