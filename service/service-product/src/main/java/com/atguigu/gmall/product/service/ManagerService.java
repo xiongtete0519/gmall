@@ -45,4 +45,10 @@ public interface ManagerService {
 
     //sku分页列表查询
     IPage<SkuInfo> skuListPage(Page<SkuInfo> skuInfoPage);
+
+    //商品的上架
+    void onSale(Long skuId);
+
+    //商品的下架
+    void cancelSale(Long skuId);
 }

@@ -316,6 +316,31 @@ public class ManagerServiceImpl implements ManagerService {
         return skuInfoMapper.selectPage(skuInfoPage,wrapper);
     }
 
+    //商品的上架:将is_sale改为1
+    //skuInfo
+    @Override
+    public void onSale(Long skuId) {
+        //封装对象
+        SkuInfo skuInfo = new SkuInfo();
+        //设置条件
+        skuInfo.setId(skuId);
+        //设置修改的内容
+        skuInfo.setIsSale(1);
+        skuInfoMapper.updateById(skuInfo);
+    }
+
+    //商品的下架：将is_sale改为0
+    @Override
+    public void cancelSale(Long skuId) {
+        //封装对象
+        SkuInfo skuInfo = new SkuInfo();
+        //设置条件
+        skuInfo.setId(skuId);
+        //设置修改的内容
+        skuInfo.setIsSale(0);
+        skuInfoMapper.updateById(skuInfo);
+    }
+
     //根据属性id查询属性值集合
     private List<BaseAttrValue> getAttrValueList(Long attrId) {
         LambdaQueryWrapper<BaseAttrValue> wrapper =

@@ -22,6 +22,20 @@ public class SkuManagerController {
     @Autowired
     private ManagerService managerService;
 
+    @ApiOperation("商品的上架")
+    @GetMapping("/onSale/{skuId}")
+    public Result onSale(@PathVariable Long skuId){
+        managerService.onSale(skuId);
+        return Result.ok();
+    }
+
+    @ApiOperation("商品的下架")
+    @GetMapping("/cancelSale/{skuId}")
+    public Result cancelSale(@PathVariable Long skuId){
+        managerService.cancelSale(skuId);
+        return Result.ok();
+    }
+
     @ApiOperation("sku分页列表查询")
     @GetMapping("/list/{page}/{limit}")
     public Result skuListPage(@PathVariable Long page, @PathVariable Long limit){
