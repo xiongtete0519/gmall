@@ -42,4 +42,7 @@ public interface ManagerService {
 
     //保存skuInfo
     void saveSkuInfo(SkuInfo skuInfo);
+
+    //sku分页列表查询
+    IPage<SkuInfo> skuListPage(Page<SkuInfo> skuInfoPage);
 }

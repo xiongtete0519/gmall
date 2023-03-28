@@ -307,6 +307,15 @@ public class ManagerServiceImpl implements ManagerService {
         }
     }
 
+    //sku分页列表查询
+    @Override
+    public IPage<SkuInfo> skuListPage(Page<SkuInfo> skuInfoPage) {
+        //排序
+        LambdaQueryWrapper<SkuInfo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.orderBy(true,false,SkuInfo::getId);
+        return skuInfoMapper.selectPage(skuInfoPage,wrapper);
+    }
+
     //根据属性id查询属性值集合
     private List<BaseAttrValue> getAttrValueList(Long attrId) {
         LambdaQueryWrapper<BaseAttrValue> wrapper =
