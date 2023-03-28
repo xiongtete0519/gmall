@@ -20,6 +20,18 @@ import java.util.List;
 public class ManagerServiceImpl implements ManagerService {
 
     @Autowired
+    private SkuInfoMapper skuInfoMapper;
+
+    @Autowired
+    private SkuImageMapper skuImageMapper;
+
+    @Autowired
+    private SkuAttrValueMapper skuAttrValueMapper;
+
+    @Autowired
+    private SkuSaleAttrValueMapper skuSaleAttrValueMapper;
+
+    @Autowired
     private BaseCategory1Mapper baseCategory1Mapper;
 
     @Autowired
@@ -242,6 +254,57 @@ public class ManagerServiceImpl implements ManagerService {
         wrapper.eq(SpuImage::getSpuId,spuId);
         List<SpuImage> spuImageList = spuImageMapper.selectList(wrapper);
         return spuImageList;
+    }
+
+    /**
+     * 保存skuInfo
+     * skuInfo sku 基本信息表
+     * sku_image sku 图片表
+     * sku_sale_attr_value sku 销售属性表
+     * sku_attr_value sku 平台属性表
+     * @param skuInfo
+     */
+    @Override
+    public void saveSkuInfo(SkuInfo skuInfo) {
+
+        //设置is_sale
+        skuInfo.setIsSale(0);
+        //保存skuInfo
+        skuInfoMapper.insert(skuInfo);
+        //保存图片
+        List<SkuImage> skuImageList = skuInfo.getSkuImageList();
+        //判断
+        if(!CollectionUtils.isEmpty(skuImageList)){
+            for (SkuImage skuImage : skuImageList) {
+                //设置skuId
+                skuImage.setSkuId(skuInfo.getId());
+                //保存
+                skuImageMapper.insert(skuImage);
+            }
+        }
+        //保存平台属性
+        List<SkuAttrValue> skuAttrValueList = skuInfo.getSkuAttrValueList();
+        //判断
+        if(!CollectionUtils.isEmpty(skuAttrValueList)){
+            for (SkuAttrValue skuAttrValue : skuAttrValueList) {
+                //设置skuId
+                skuAttrValue.setSkuId(skuInfo.getId());
+                //保存
+                skuAttrValueMapper.insert(skuAttrValue);
+            }
+        }
+        //保存销售属性
+        List<SkuSaleAttrValue> skuSaleAttrValueList = skuInfo.getSkuSaleAttrValueList();
+        if(!CollectionUtils.isEmpty(skuSaleAttrValueList)){
+            for (SkuSaleAttrValue skuSaleAttrValue : skuSaleAttrValueList) {
+                //设置skuId
+                skuSaleAttrValue.setSkuId(skuInfo.getId());
+                //设置spuId
+                skuSaleAttrValue.setSpuId(skuInfo.getSpuId());
+                //保存
+                skuSaleAttrValueMapper.insert(skuSaleAttrValue);
+            }
+        }
     }
 
     //根据属性id查询属性值集合
