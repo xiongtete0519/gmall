@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 public interface ManagerService {
 
@@ -64,4 +65,7 @@ public interface ManagerService {
 
     //根据skuId,spuId获取销售属性数据
     List<SpuSaleAttr> getSpuSaleAttrListCheckBySku(Long skuId, Long spuId);
+
+    //根据spuId获取销售属性id和skuId的对应关系
+    Map getSkuValueIdsMap(Long spuId);
 }

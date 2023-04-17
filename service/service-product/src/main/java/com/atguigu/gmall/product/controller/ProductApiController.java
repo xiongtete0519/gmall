@@ -13,12 +13,20 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/product/inner")
 public class ProductApiController {
     @Autowired
     private ManagerService managerService;
+
+    @ApiOperation("根据spuId获取销售属性id和skuId的对应关系")
+    @GetMapping("/getSkuValueIdsMap/{spuId}")
+    public Map getSkuValueIdsMap(@PathVariable Long spuId){
+
+        return managerService.getSkuValueIdsMap(spuId);
+    }
 
     @ApiOperation("根据skuId,spuId获取销售属性数据")
     //getSpuSaleAttrListCheckBySku/{skuId}/{spuId}

@@ -14,7 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @SuppressWarnings("all")
@@ -380,6 +382,25 @@ public class ManagerServiceImpl implements ManagerService {
     public List<SpuSaleAttr> getSpuSaleAttrListCheckBySku(Long skuId, Long spuId) {
         List<SpuSaleAttr> spuSaleAttrList=spuSaleAttrMapper.selectSpuSaleAttrListCheckBySku(skuId,spuId);
         return spuSaleAttrList;
+    }
+
+    //根据spuId获取销售属性id和skuId的对应关系
+    @Override
+    public Map getSkuValueIdsMap(Long spuId) {
+        //查询对应关系集合
+        List<Map> mapList = skuSaleAttrValueMapper.selectSkuValueIdsMap(spuId);
+
+        //创建map整合返回的数据
+        Map<Object,Object> resultMap=new HashMap<>();
+        if(!CollectionUtils.isEmpty(mapList)){
+            for (Map map : mapList) {
+                //每个map只有一条数据
+                //整合所有 key:属性id拼接的结果,value:skuId
+                resultMap.put(map.get("value_ids"),map.get("sku_id"));
+            }
+        }
+
+        return resultMap;
     }
 
     //根据属性id查询属性值集合
