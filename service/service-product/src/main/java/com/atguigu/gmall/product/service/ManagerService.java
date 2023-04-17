@@ -54,4 +54,7 @@ public interface ManagerService {
 
     //根据skuId查询skuInfo信息和图片列表
     SkuInfo getSkuInfo(Long skuId);
+
+    //根据三级分类id获取分类信息
+    BaseCategoryView getCategoryView(Long category3Id);
 }

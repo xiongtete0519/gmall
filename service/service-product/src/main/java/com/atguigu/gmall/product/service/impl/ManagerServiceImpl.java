@@ -64,6 +64,9 @@ public class ManagerServiceImpl implements ManagerService {
     @Autowired
     private SpuPosterMapper spuPosterMapper;
 
+    @Autowired
+    private BaseCategoryViewMapper baseCategoryViewMapper;
+
     //查询一级分类
     @Override
     public List<BaseCategory1> getCategory1() {
@@ -353,6 +356,12 @@ public class ManagerServiceImpl implements ManagerService {
         //设置当前图片列表
         skuInfo.setSkuImageList(skuImages);
         return skuInfo;
+    }
+
+    //根据三级分类id获取分类信息(直接查视图)
+    @Override
+    public BaseCategoryView getCategoryView(Long category3Id) {
+        return baseCategoryViewMapper.selectById(category3Id);
     }
 
     //根据属性id查询属性值集合

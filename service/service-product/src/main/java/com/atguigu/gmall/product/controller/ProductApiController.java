@@ -1,5 +1,6 @@
 package com.atguigu.gmall.product.controller;
 
+import com.atguigu.gmall.model.product.BaseCategoryView;
 import com.atguigu.gmall.model.product.SkuInfo;
 import com.atguigu.gmall.product.service.ManagerService;
 import io.swagger.annotations.ApiOperation;
@@ -20,5 +21,12 @@ public class ProductApiController {
     public SkuInfo getSkuInfo(@PathVariable Long skuId){
         SkuInfo skuInfo=managerService.getSkuInfo(skuId);
         return skuInfo;
+    }
+
+    @ApiOperation("根据三级分类id获取分类信息")
+    @GetMapping("/getCategoryView/{category3Id}")
+    public BaseCategoryView getCategoryView(@PathVariable Long category3Id){
+
+        return managerService.getCategoryView(category3Id);
     }
 }
