@@ -10,11 +10,19 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
+
 @RestController
 @RequestMapping("/api/product/inner")
 public class ProductApiController {
     @Autowired
     private ManagerService managerService;
+
+    @ApiOperation("根据skuId查询sku实时价格")
+    @GetMapping("getSkuPrice/{skuId}")
+    public BigDecimal getSkuPrice(@PathVariable Long skuId){
+        return managerService.getSkuPrice(skuId);
+    }
 
     @ApiOperation("根据skuId查询skuInfo信息和图片列表")
     @GetMapping("/getSkuInfo/{skuId}")

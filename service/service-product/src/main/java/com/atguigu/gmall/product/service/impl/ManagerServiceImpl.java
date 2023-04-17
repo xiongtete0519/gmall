@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -362,6 +363,16 @@ public class ManagerServiceImpl implements ManagerService {
     @Override
     public BaseCategoryView getCategoryView(Long category3Id) {
         return baseCategoryViewMapper.selectById(category3Id);
+    }
+
+    //根据skuId查询sku实时价格
+    @Override
+    public BigDecimal getSkuPrice(Long skuId) {
+        SkuInfo skuInfo = skuInfoMapper.selectById(skuId);
+        if(skuInfo!=null){
+            return skuInfo.getPrice();
+        }
+        return BigDecimal.ZERO;
     }
 
     //根据属性id查询属性值集合

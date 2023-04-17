@@ -4,6 +4,7 @@ import com.atguigu.gmall.model.product.*;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface ManagerService {
@@ -57,4 +58,7 @@ public interface ManagerService {
 
     //根据三级分类id获取分类信息
     BaseCategoryView getCategoryView(Long category3Id);
+
+    //根据skuId查询sku实时价格
+    BigDecimal getSkuPrice(Long skuId);
 }
