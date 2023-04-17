@@ -341,6 +341,20 @@ public class ManagerServiceImpl implements ManagerService {
         skuInfoMapper.updateById(skuInfo);
     }
 
+    //根据skuId查询skuInfo信息和图片列表
+    @Override
+    public SkuInfo getSkuInfo(Long skuId) {
+        //查询skuInfo
+        SkuInfo skuInfo = skuInfoMapper.selectById(skuId);
+        //根据skuId查询图片列表
+        LambdaQueryWrapper<SkuImage> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SkuImage::getSkuId,skuId);
+        List<SkuImage> skuImages = skuImageMapper.selectList(wrapper);
+        //设置当前图片列表
+        skuInfo.setSkuImageList(skuImages);
+        return skuInfo;
+    }
+
     //根据属性id查询属性值集合
     private List<BaseAttrValue> getAttrValueList(Long attrId) {
         LambdaQueryWrapper<BaseAttrValue> wrapper =

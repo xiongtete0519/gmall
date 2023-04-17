@@ -51,4 +51,7 @@ public interface ManagerService {
 
     //商品的下架
     void cancelSale(Long skuId);
+
+    //根据skuId查询skuInfo信息和图片列表
+    SkuInfo getSkuInfo(Long skuId);
 }
