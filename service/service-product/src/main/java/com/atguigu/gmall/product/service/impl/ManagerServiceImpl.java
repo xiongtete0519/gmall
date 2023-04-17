@@ -375,6 +375,13 @@ public class ManagerServiceImpl implements ManagerService {
         return BigDecimal.ZERO;
     }
 
+    //根据skuId,spuId获取销售属性数据
+    @Override
+    public List<SpuSaleAttr> getSpuSaleAttrListCheckBySku(Long skuId, Long spuId) {
+        List<SpuSaleAttr> spuSaleAttrList=spuSaleAttrMapper.selectSpuSaleAttrListCheckBySku(skuId,spuId);
+        return spuSaleAttrList;
+    }
+
     //根据属性id查询属性值集合
     private List<BaseAttrValue> getAttrValueList(Long attrId) {
         LambdaQueryWrapper<BaseAttrValue> wrapper =

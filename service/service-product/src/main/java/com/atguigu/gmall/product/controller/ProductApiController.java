@@ -2,6 +2,7 @@ package com.atguigu.gmall.product.controller;
 
 import com.atguigu.gmall.model.product.BaseCategoryView;
 import com.atguigu.gmall.model.product.SkuInfo;
+import com.atguigu.gmall.model.product.SpuSaleAttr;
 import com.atguigu.gmall.product.service.ManagerService;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,12 +12,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/product/inner")
 public class ProductApiController {
     @Autowired
     private ManagerService managerService;
+
+    @ApiOperation("根据skuId,spuId获取销售属性数据")
+    //getSpuSaleAttrListCheckBySku/{skuId}/{spuId}
+    @GetMapping("/getSpuSaleAttrListCheckBySku/{skuId}/{spuId}")
+    public List<SpuSaleAttr> getSpuSaleAttrListCheckBySku(@PathVariable Long skuId,
+                                             @PathVariable Long spuId){
+        return managerService.getSpuSaleAttrListCheckBySku(skuId,spuId);
+    }
 
     @ApiOperation("根据skuId查询sku实时价格")
     @GetMapping("getSkuPrice/{skuId}")

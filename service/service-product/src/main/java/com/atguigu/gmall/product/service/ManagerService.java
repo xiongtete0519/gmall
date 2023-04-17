@@ -61,4 +61,7 @@ public interface ManagerService {
 
     //根据skuId查询sku实时价格
     BigDecimal getSkuPrice(Long skuId);
+
+    //根据skuId,spuId获取销售属性数据
+    List<SpuSaleAttr> getSpuSaleAttrListCheckBySku(Long skuId, Long spuId);
 }
