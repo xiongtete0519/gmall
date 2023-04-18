@@ -403,6 +403,15 @@ public class ManagerServiceImpl implements ManagerService {
         return resultMap;
     }
 
+    //根据spuId查询海报集合数据
+    @Override
+    public List<SpuPoster> findSpuPosterBySpuId(Long spuId) {
+        LambdaQueryWrapper<SpuPoster> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SpuPoster::getSpuId,spuId);
+        List<SpuPoster> posterList = spuPosterMapper.selectList(wrapper);
+        return posterList;
+    }
+
     //根据属性id查询属性值集合
     private List<BaseAttrValue> getAttrValueList(Long attrId) {
         LambdaQueryWrapper<BaseAttrValue> wrapper =

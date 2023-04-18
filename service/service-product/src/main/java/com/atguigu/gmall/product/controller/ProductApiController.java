@@ -2,6 +2,7 @@ package com.atguigu.gmall.product.controller;
 
 import com.atguigu.gmall.model.product.BaseCategoryView;
 import com.atguigu.gmall.model.product.SkuInfo;
+import com.atguigu.gmall.model.product.SpuPoster;
 import com.atguigu.gmall.model.product.SpuSaleAttr;
 import com.atguigu.gmall.product.service.ManagerService;
 import io.swagger.annotations.ApiOperation;
@@ -20,6 +21,12 @@ import java.util.Map;
 public class ProductApiController {
     @Autowired
     private ManagerService managerService;
+
+    @ApiOperation("根据spuId查询海报集合数据")
+    @GetMapping("/findSpuPosterBySpuId/{spuId}")
+    public List<SpuPoster> findSpuPosterBySpuId(@PathVariable Long spuId){
+        return managerService.findSpuPosterBySpuId(spuId);
+    }
 
     @ApiOperation("根据spuId获取销售属性id和skuId的对应关系")
     @GetMapping("/getSkuValueIdsMap/{spuId}")

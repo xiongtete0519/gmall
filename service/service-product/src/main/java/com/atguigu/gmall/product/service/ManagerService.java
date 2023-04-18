@@ -68,4 +68,7 @@ public interface ManagerService {
 
     //根据spuId获取销售属性id和skuId的对应关系
     Map getSkuValueIdsMap(Long spuId);
+
+    //根据spuId查询海报集合数据
+    List<SpuPoster> findSpuPosterBySpuId(Long spuId);
 }
