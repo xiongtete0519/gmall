@@ -10,6 +10,7 @@
         <module>service</module>
         <module>gmall-gateway</module>
         <module>service-client</module>
+        <module>web</module>
     </modules>
 
     <!--引入spring boot 父工程-->
