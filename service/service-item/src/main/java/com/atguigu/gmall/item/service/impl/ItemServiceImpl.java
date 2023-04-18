@@ -1,5 +1,6 @@
 package com.atguigu.gmall.item.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.atguigu.gmall.item.service.ItemService;
 import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.client.ProductFeignClient;
@@ -10,6 +11,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @SuppressWarnings("all")
@@ -40,16 +42,23 @@ public class ItemServiceImpl implements ItemService {
 
             resultMap.put("categoryView",categoryView);
             resultMap.put("spuSaleAttrList",spuSaleAttrListCheckBySku);
-            resultMap.put("valueSkuJson",skuValueIdsMap);
+            resultMap.put("valuesSkuJson", JSON.toJSONString(skuValueIdsMap));
             resultMap.put("spuPosterList",spuPosterBySpuId);
         }
         //获取平台信息
         List<BaseAttrInfo> attrList = productFeignClient.getAttrList(skuId);
+        //处理数据符合要求 List  Obj  key attrName value attrValue
+        List<Map<String, String>> spuAttrList = attrList.stream().map(baseAttrInfo -> {
+            Map<String, String> map = new HashMap<>();
+            map.put("attrName", baseAttrInfo.getAttrName());
+            map.put("attrValue", baseAttrInfo.getAttrValueList().get(0).getValueName());
+            return map;
+        }).collect(Collectors.toList());
 
         //存储数据
         resultMap.put("skuInfo",skuInfo);
         resultMap.put("price",skuPrice);
-        resultMap.put("skuAttrList",attrList);
+        resultMap.put("skuAttrList",spuAttrList);
         return resultMap;
     }
 }
