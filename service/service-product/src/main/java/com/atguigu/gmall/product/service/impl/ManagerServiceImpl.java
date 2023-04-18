@@ -412,6 +412,12 @@ public class ManagerServiceImpl implements ManagerService {
         return posterList;
     }
 
+    //根据skuId查询平台属性和平台属性值
+    @Override
+    public List<BaseAttrInfo> getAttrList(Long skuId) {
+        return baseAttrInfoMapper.selectAttrList(skuId);
+    }
+
     //根据属性id查询属性值集合
     private List<BaseAttrValue> getAttrValueList(Long attrId) {
         LambdaQueryWrapper<BaseAttrValue> wrapper =

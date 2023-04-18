@@ -1,9 +1,6 @@
 package com.atguigu.gmall.product.controller;
 
-import com.atguigu.gmall.model.product.BaseCategoryView;
-import com.atguigu.gmall.model.product.SkuInfo;
-import com.atguigu.gmall.model.product.SpuPoster;
-import com.atguigu.gmall.model.product.SpuSaleAttr;
+import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.service.ManagerService;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +18,12 @@ import java.util.Map;
 public class ProductApiController {
     @Autowired
     private ManagerService managerService;
+
+    @ApiOperation("根据skuId查询平台属性和平台属性值")
+    @GetMapping("/getAttrList/{skuId}")
+    public List<BaseAttrInfo> getAttrList(@PathVariable Long skuId){
+        return managerService.getAttrList(skuId);
+    }
 
     @ApiOperation("根据spuId查询海报集合数据")
     @GetMapping("/findSpuPosterBySpuId/{spuId}")

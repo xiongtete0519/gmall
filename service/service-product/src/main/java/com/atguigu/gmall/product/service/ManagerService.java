@@ -71,4 +71,7 @@ public interface ManagerService {
 
     //根据spuId查询海报集合数据
     List<SpuPoster> findSpuPosterBySpuId(Long spuId);
+
+    //根据skuId查询平台属性和平台属性值
+    List<BaseAttrInfo> getAttrList(Long skuId);
 }

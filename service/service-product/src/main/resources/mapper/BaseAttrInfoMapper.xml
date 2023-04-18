@@ -45,4 +45,19 @@
         </where>
         order by bai.category_level,bai.id
     </select>
+
+    <!--根据skuId查询平台属性和平台属性值-->
+    <select id="selectAttrList" resultMap="BaseAttrInfoMap">
+        select bai.id,
+               bai.attr_name,
+               bai.category_id,
+               bai.category_level,
+               bav.id attr_value_id,
+               bav.value_name,
+               bav.attr_id
+        from base_attr_info bai
+                inner join base_attr_value bav on bai.id=bav.attr_id
+                inner join sku_attr_value skv on bav.id=skv.value_id
+        where skv.sku_id=#{skuId};
+    </select>
 </mapper>
