@@ -416,7 +416,7 @@ public class ManagerServiceImpl implements ManagerService {
                     defaultRedisScript.setResultType(Long.class);
 
                     //执行删除
-                    redisTemplate.execute(defaultRedisScript, Arrays.asList("lock"), uuid);
+                    redisTemplate.execute(defaultRedisScript, Arrays.asList(lockKey), uuid);
                     //返回数据
                     return skuInfoDB;
                 } else {
