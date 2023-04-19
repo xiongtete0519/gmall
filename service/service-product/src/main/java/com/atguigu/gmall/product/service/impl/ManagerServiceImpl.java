@@ -1,5 +1,6 @@
 package com.atguigu.gmall.product.service.impl;
 
+import com.atguigu.gmall.common.cache.GmallCache;
 import com.atguigu.gmall.common.constant.RedisConst;
 import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.mapper.*;
@@ -361,13 +362,14 @@ public class ManagerServiceImpl implements ManagerService {
 
     //根据skuId查询skuInfo信息和图片列表
     @Override
+    @GmallCache(prefix =RedisConst.SKUKEY_PREFIX)  //key:  sku:1314:info
     public SkuInfo getSkuInfo(Long skuId) {
         //查询数据库mysql获取数据
-//        return getSkuInfoDB(skuId);
+        return getSkuInfoDB(skuId);
         //使用redis实现分布式锁缓存数据
 //        return getSkuInfoRedis(skuId);
-
-        return getSkuInfoRedisson(skuId);
+        //使用Redisson实现分布式锁
+//        return getSkuInfoRedisson(skuId);
     }
 
     /**
@@ -508,17 +510,20 @@ public class ManagerServiceImpl implements ManagerService {
         wrapper.eq(SkuImage::getSkuId, skuId);
         List<SkuImage> skuImages = skuImageMapper.selectList(wrapper);
         //设置当前图片列表
-        skuInfo.setSkuImageList(skuImages);
+        if(skuInfo!=null){
+            skuInfo.setSkuImageList(skuImages);
+        }
         return skuInfo;
     }
 
     //根据三级分类id获取分类信息(直接查视图)
     @Override
+    @GmallCache(prefix ="categoryView:")
     public BaseCategoryView getCategoryView(Long category3Id) {
         return baseCategoryViewMapper.selectById(category3Id);
     }
 
-    //根据skuId查询sku实时价格
+    //根据skuId查询sku实时价格,假别不要用缓存
     @Override
     public BigDecimal getSkuPrice(Long skuId) {
         SkuInfo skuInfo = skuInfoMapper.selectById(skuId);
@@ -530,6 +535,7 @@ public class ManagerServiceImpl implements ManagerService {
 
     //根据skuId,spuId获取销售属性数据
     @Override
+    @GmallCache(prefix ="spuSaleAttrListCheckBySku:")
     public List<SpuSaleAttr> getSpuSaleAttrListCheckBySku(Long skuId, Long spuId) {
         List<SpuSaleAttr> spuSaleAttrList = spuSaleAttrMapper.selectSpuSaleAttrListCheckBySku(skuId, spuId);
         return spuSaleAttrList;
@@ -537,6 +543,7 @@ public class ManagerServiceImpl implements ManagerService {
 
     //根据spuId获取销售属性id和skuId的对应关系
     @Override
+    @GmallCache(prefix ="skuValueIdsMap:")
     public Map getSkuValueIdsMap(Long spuId) {
         //查询对应关系集合
         List<Map> mapList = skuSaleAttrValueMapper.selectSkuValueIdsMap(spuId);
@@ -556,6 +563,7 @@ public class ManagerServiceImpl implements ManagerService {
 
     //根据spuId查询海报集合数据
     @Override
+    @GmallCache(prefix ="spuPosterBySpuId:")
     public List<SpuPoster> findSpuPosterBySpuId(Long spuId) {
         LambdaQueryWrapper<SpuPoster> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SpuPoster::getSpuId, spuId);
@@ -565,6 +573,7 @@ public class ManagerServiceImpl implements ManagerService {
 
     //根据skuId查询平台属性和平台属性值
     @Override
+    @GmallCache(prefix ="attrList:")
     public List<BaseAttrInfo> getAttrList(Long skuId) {
         return baseAttrInfoMapper.selectAttrList(skuId);
     }
