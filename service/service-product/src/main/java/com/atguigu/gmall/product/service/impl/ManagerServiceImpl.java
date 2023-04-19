@@ -9,6 +9,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -74,6 +76,9 @@ public class ManagerServiceImpl implements ManagerService {
 
     @Autowired
     private RedisTemplate redisTemplate;
+
+    @Autowired
+    private RedissonClient redissonClient;
 
     //查询一级分类
     @Override
@@ -357,8 +362,68 @@ public class ManagerServiceImpl implements ManagerService {
     //根据skuId查询skuInfo信息和图片列表
     @Override
     public SkuInfo getSkuInfo(Long skuId) {
+        //查询数据库mysql获取数据
 //        return getSkuInfoDB(skuId);
-        return getSkuInfoRedis(skuId);
+        //使用redis实现分布式锁缓存数据
+//        return getSkuInfoRedis(skuId);
+
+        return getSkuInfoRedisson(skuId);
+    }
+
+    /**
+     *使用Redisson改造skuInfo信息
+     */
+    private SkuInfo getSkuInfoRedisson(Long skuId) {
+        try {
+            //定义sku数据获取的Key
+            String skuKey=RedisConst.SKUKEY_PREFIX+skuId+RedisConst.SKUKEY_SUFFIX;
+            //尝试从缓存中获取数据
+            SkuInfo skuInfo = (SkuInfo) redisTemplate.opsForValue().get(skuKey);
+            //判断缓存中是否有数据
+            if(skuInfo==null){
+                //定义锁的key
+                String skuLock=RedisConst.SKUKEY_PREFIX+skuId+RedisConst.SKULOCK_SUFFIX;
+                //获取锁
+                RLock lock = redissonClient.getLock(skuLock);
+                //加锁
+                boolean res = lock.tryLock(RedisConst.SKULOCK_EXPIRE_PX1, RedisConst.SKULOCK_EXPIRE_PX2, TimeUnit.SECONDS);
+                //判断
+                if(res){
+                    try {
+                        //获取到了锁，查询数据库
+                        skuInfo= getSkuInfoDB(skuId);
+                        //判断
+                        if(skuInfo==null){
+                            //存储null，避免缓存穿透
+                            skuInfo=new SkuInfo();
+                            redisTemplate.opsForValue().set(skuKey,skuInfo,RedisConst.SKUKEY_TEMPORARY_TIMEOUT,TimeUnit.SECONDS);
+                            return skuInfo;
+                        }else{
+                            //存储
+                            redisTemplate.opsForValue().set(skuKey,skuInfo,RedisConst.SKUKEY_TIMEOUT,TimeUnit.SECONDS);
+//                            redisTemplate.opsForValue().set(skuKey,skuInfo);
+                            //返回
+                            return skuInfo;
+                        }
+                    } finally {
+                        //释放锁
+                        lock.unlock();
+                    }
+
+                }else{
+                    //没有获取到锁
+                    Thread.sleep(100);
+                    return getSkuInfoRedisson(skuId);
+                }
+            }else{
+                //缓存中有数据
+                return skuInfo;
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        //兜底方法,前面代码异常，这里会执行
+        return getSkuInfoDB(skuId);
     }
 
     /**
