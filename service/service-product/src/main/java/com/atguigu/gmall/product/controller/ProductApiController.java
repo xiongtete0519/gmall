@@ -1,5 +1,7 @@
 package com.atguigu.gmall.product.controller;
 
+import com.alibaba.fastjson.JSONObject;
+import com.atguigu.gmall.common.result.Result;
 import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.service.ManagerService;
 import io.swagger.annotations.ApiOperation;
@@ -18,6 +20,13 @@ import java.util.Map;
 public class ProductApiController {
     @Autowired
     private ManagerService managerService;
+
+    @ApiOperation("首页数据查询三级分类数据")
+    @GetMapping("/getBaseCategoryList")
+    public Result getBaseCategoryList(){
+        List<JSONObject> result=managerService.getBaseCategoryList();
+        return Result.ok(result);
+    }
 
     @ApiOperation("根据skuId查询平台属性和平台属性值")
     @GetMapping("/getAttrList/{skuId}")
