@@ -635,7 +635,7 @@ public class ManagerServiceImpl implements ManagerService {
             //创建一个封装二级分类的集合
             ArrayList<JSONObject> categoryChild2 = new ArrayList<>();
             //遍历
-            for (Map.Entry<Long, List<BaseCategoryView>> category2Entry : category1Map.entrySet()) {
+            for (Map.Entry<Long, List<BaseCategoryView>> category2Entry : category2Map.entrySet()) {
                 //二级分类的id
                 Long category2Id = category2Entry.getKey();
                 //二级分类的名称

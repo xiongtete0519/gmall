@@ -1,5 +1,6 @@
 package com.atguigu.gmall.product.client;
 
+import com.atguigu.gmall.common.result.Result;
 import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.client.impl.ProductDegradeFeignClient;
 import io.swagger.annotations.ApiOperation;
@@ -16,6 +17,10 @@ import java.util.Map;
  */
 @FeignClient(value = "service-product",fallback = ProductDegradeFeignClient.class)
 public interface ProductFeignClient {
+
+    @ApiOperation("首页数据查询三级分类数据")
+    @GetMapping("/api/product/inner/getBaseCategoryList")
+    public Result getBaseCategoryList();
 
     @ApiOperation("根据skuId查询平台属性和平台属性值")
     @GetMapping("/api/product/inner/getAttrList/{skuId}")

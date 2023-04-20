@@ -1,5 +1,6 @@
 package com.atguigu.gmall.product.client.impl;
 
+import com.atguigu.gmall.common.result.Result;
 import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.client.ProductFeignClient;
 import org.springframework.stereotype.Component;
@@ -11,6 +12,12 @@ import java.util.Map;
 
 @Component
 public class ProductDegradeFeignClient implements ProductFeignClient {
+
+    @Override
+    public Result getBaseCategoryList() {
+        return Result.fail();
+    }
+
     @Override
     public List<BaseAttrInfo> getAttrList(Long skuId) {
         return null;
