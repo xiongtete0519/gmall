@@ -11,6 +11,25 @@ import java.util.Date;
 import java.util.List;
 
 // Index = goods , Type = info  es 7.8.0 逐渐淡化type！  修改！
+
+/**
+ * 操作es提供的一个实体类
+ * 1、可以设置索引库和mapping
+ * 2、操作过程中可以封装数据
+ * @Document：文档注解
+ * indexName：索引库名称
+ * shards：分片 集群  10： 3 3 4
+ * replicas：副本 备份  一共有几份 9 主
+ *
+ * @Id：所修饰的字段存储数据后作为文档的id skuId
+ * @Field:文档中的字段
+ *      FieldType：字段的类型
+ *      字符串内容的类型：
+ *                      1、Keyword：不分词   我是一个好人123456
+ *                      2、Text  :分词
+ *                      3、analyzer：指定分词时使用的分词器
+ *                      4、searchAnalyzer：搜索时的分词器
+ */
 @Data
 @Document(indexName = "goods" , shards = 3,replicas = 2)
 public class Goods {
@@ -22,7 +41,7 @@ public class Goods {
     private String defaultImg;
 
     //  es 中能分词的字段，这个字段数据类型必须是 text！keyword 不分词！
-    @Field(type = FieldType.Text, analyzer = "ik_max_word")
+    @Field(type = FieldType.Text, analyzer = "ik_max_word",searchAnalyzer = "ik_smart")
     private String title;
 
     @Field(type = FieldType.Double)
