@@ -21,6 +21,13 @@ public class ListApiController {
     @Autowired
     private SearchService searchService;
 
+    @ApiOperation("更新商品的热度排名")
+    @GetMapping("/inner/incrHotScore/{skuId}")
+    public Result incrHotScore(@PathVariable Long skuId){
+        searchService.incrHotScore(skuId);
+        return Result.ok();
+    }
+
     @ApiOperation("商品下架")
     @GetMapping("inner/lowerGoods/{skuId}")
     public Result lowerGoods(@PathVariable Long skuId){

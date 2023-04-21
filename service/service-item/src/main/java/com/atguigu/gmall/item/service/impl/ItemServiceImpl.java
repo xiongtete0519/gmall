@@ -3,6 +3,7 @@ package com.atguigu.gmall.item.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.atguigu.gmall.common.constant.RedisConst;
 import com.atguigu.gmall.item.service.ItemService;
+import com.atguigu.gmall.list.client.ListFeignClient;
 import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.client.ProductFeignClient;
 import org.redisson.api.RBloomFilter;
@@ -32,6 +33,9 @@ public class ItemServiceImpl implements ItemService {
 
     @Autowired
     private ThreadPoolExecutor executor;
+
+    @Autowired
+    private ListFeignClient listFeignClient;
 
     //获取商品详情数据
     @Override
@@ -118,6 +122,15 @@ public class ItemServiceImpl implements ItemService {
             }
         }, executor);
 
+        //更新商品热度
+        CompletableFuture<Void> incrHotScoreCompletableFuture = CompletableFuture.runAsync(new Runnable() {
+            @Override
+            public void run() {
+                listFeignClient.incrHotScore(skuId);
+            }
+        }, executor);
+
+
         //多任务组合 -- 所有的异步任务执行完成才是完成
         CompletableFuture.allOf(
                 skuInfoCompletableFuture,
@@ -126,7 +139,8 @@ public class ItemServiceImpl implements ItemService {
                 spuSaleAttrListCheckBySkuCompletableFuture,
                 skuValueIdsMapCompletableFuture,
                 findSpuPosterBySpuIdCompletableFuture,
-                attrListCompletableFuture
+                attrListCompletableFuture,
+                incrHotScoreCompletableFuture
         ).join();
 
         return resultMap;

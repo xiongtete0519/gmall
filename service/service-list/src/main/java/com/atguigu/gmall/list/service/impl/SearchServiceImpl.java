@@ -10,11 +10,13 @@ import com.atguigu.gmall.model.product.BaseTrademark;
 import com.atguigu.gmall.model.product.SkuInfo;
 import com.atguigu.gmall.product.client.ProductFeignClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,6 +28,9 @@ public class SearchServiceImpl implements SearchService {
 
     @Autowired
     private ProductFeignClient productFeignClient;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     //商品上架
     @Override
@@ -92,5 +97,32 @@ public class SearchServiceImpl implements SearchService {
     @Override
     public void lowerGoods(Long skuId) {
         goodsRepository.deleteById(skuId);
+    }
+
+    /**
+     * 更新商品的热度排名
+     * @param skuId
+     * 1、保存到Redis作为累计
+     *  redis的类型：
+     *      hotScore skuId:21 1
+     * 2、累计到10位整数，修改es
+     */
+    @Override
+    public void incrHotScore(Long skuId) {
+
+        //定义key
+        String hotKey="hotScore";
+        //累计数据
+        Double hotScore = redisTemplate.opsForZSet().incrementScore(hotKey, "skuId:" + skuId, 1);
+        //当累积到整10的时候修改到es
+        if(hotScore%10==0){
+            //获取skuId对应的商品
+            Optional<Goods> optional = goodsRepository.findById(skuId);
+            Goods goods = optional.get();
+            //修改，没有update,save覆盖方式id
+            goods.setHotScore(Math.round(hotScore));
+            //修改
+            goodsRepository.save(goods);
+        }
     }
 }
