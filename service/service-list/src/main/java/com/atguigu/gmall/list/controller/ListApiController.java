@@ -21,6 +21,13 @@ public class ListApiController {
     @Autowired
     private SearchService searchService;
 
+    @ApiOperation("商品下架")
+    @GetMapping("inner/lowerGoods/{skuId}")
+    public Result lowerGoods(@PathVariable Long skuId){
+        searchService.lowerGoods(skuId);
+        return Result.ok();
+    }
+
     @ApiOperation("商品上架")
     @GetMapping("/inner/upperGoods/{skuId}")
     public Result upperGoods(@PathVariable Long skuId){

@@ -87,4 +87,10 @@ public class SearchServiceImpl implements SearchService {
         //将数据添加到es
         goodsRepository.save(goods);
     }
+
+    //商品下架
+    @Override
+    public void lowerGoods(Long skuId) {
+        goodsRepository.deleteById(skuId);
+    }
 }
