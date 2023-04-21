@@ -18,6 +18,10 @@ import java.util.Map;
 @FeignClient(value = "service-product",fallback = ProductDegradeFeignClient.class)
 public interface ProductFeignClient {
 
+    @ApiOperation("根据品牌id获取品牌数据")
+    @GetMapping("/api/product/inner/getTrademark/{tmId}")
+    public BaseTrademark getTrademark(@PathVariable Long tmId);
+
     @ApiOperation("首页数据查询三级分类数据")
     @GetMapping("/api/product/inner/getBaseCategoryList")
     public Result getBaseCategoryList();
