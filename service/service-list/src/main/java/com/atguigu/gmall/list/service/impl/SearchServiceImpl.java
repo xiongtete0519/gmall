@@ -4,15 +4,32 @@ import com.atguigu.gmall.list.repository.GoodsRepository;
 import com.atguigu.gmall.list.service.SearchService;
 import com.atguigu.gmall.model.list.Goods;
 import com.atguigu.gmall.model.list.SearchAttr;
+import com.atguigu.gmall.model.list.SearchParam;
+import com.atguigu.gmall.model.list.SearchResponseVo;
 import com.atguigu.gmall.model.product.BaseAttrInfo;
 import com.atguigu.gmall.model.product.BaseCategoryView;
 import com.atguigu.gmall.model.product.BaseTrademark;
 import com.atguigu.gmall.model.product.SkuInfo;
 import com.atguigu.gmall.product.client.ProductFeignClient;
+import lombok.SneakyThrows;
+import lombok.Synchronized;
+import org.apache.lucene.search.join.ScoreMode;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.index.query.*;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.nested.NestedAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.util.Date;
 import java.util.List;
@@ -32,6 +49,9 @@ public class SearchServiceImpl implements SearchService {
     @Autowired
     private RedisTemplate redisTemplate;
 
+    @Autowired
+    private RestHighLevelClient highLevelClient;
+
     //商品上架
     @Override
     public void upperGoods(Long skuId) {
@@ -40,24 +60,24 @@ public class SearchServiceImpl implements SearchService {
         Goods goods = new Goods();
         //设置skuInfo
         SkuInfo skuInfo = productFeignClient.getSkuInfo(skuId);
-        if(skuInfo!=null){
+        if (skuInfo != null) {
             goods.setId(skuId);
             goods.setDefaultImg(skuInfo.getSkuDefaultImg());
             goods.setTitle(skuInfo.getSkuName());
             goods.setPrice(productFeignClient.getSkuPrice(skuId).doubleValue());
             goods.setCreateTime(new Date());
-            goods.setTmId(skuInfo.getTmId());
 
             //设置品牌信息
             BaseTrademark trademark = productFeignClient.getTrademark(skuInfo.getTmId());
-            if(trademark!=null){
+            if (trademark != null) {
+                goods.setTmId(skuInfo.getTmId());
                 goods.setTmName(trademark.getTmName());
                 goods.setTmLogoUrl(trademark.getLogoUrl());
             }
 
             //设置分类信息
             BaseCategoryView categoryView = productFeignClient.getCategoryView(skuInfo.getCategory3Id());
-            if(categoryView!=null){
+            if (categoryView != null) {
                 goods.setCategory1Id(categoryView.getCategory1Id());
                 goods.setCategory2Id(categoryView.getCategory2Id());
                 goods.setCategory3Id(categoryView.getCategory3Id());
@@ -70,7 +90,7 @@ public class SearchServiceImpl implements SearchService {
         //设置平台属性信息
         List<BaseAttrInfo> attrList = productFeignClient.getAttrList(skuId);
         //判断
-        if(!CollectionUtils.isEmpty(attrList)){
+        if (!CollectionUtils.isEmpty(attrList)) {
             //BaseAttrInfo->SearchAttr
             //List<BaseAttrInfo>->List<SearchAttr>
             List<SearchAttr> searchAttrList = attrList.stream().map(baseAttrInfo -> {
@@ -101,21 +121,21 @@ public class SearchServiceImpl implements SearchService {
 
     /**
      * 更新商品的热度排名
-     * @param skuId
-     * 1、保存到Redis作为累计
-     *  redis的类型：
-     *      hotScore skuId:21 1
-     * 2、累计到10位整数，修改es
+     *
+     * @param skuId 1、保存到Redis作为累计
+     *              redis的类型：
+     *              hotScore skuId:21 1
+     *              2、累计到10位整数，修改es
      */
     @Override
     public void incrHotScore(Long skuId) {
 
         //定义key
-        String hotKey="hotScore";
+        String hotKey = "hotScore";
         //累计数据
         Double hotScore = redisTemplate.opsForZSet().incrementScore(hotKey, "skuId:" + skuId, 1);
         //当累积到整10的时候修改到es
-        if(hotScore%10==0){
+        if (hotScore % 10 == 0) {
             //获取skuId对应的商品
             Optional<Goods> optional = goodsRepository.findById(skuId);
             Goods goods = optional.get();
@@ -124,5 +144,153 @@ public class SearchServiceImpl implements SearchService {
             //修改
             goodsRepository.save(goods);
         }
+    }
+
+    //商品搜索
+    @Override
+    @SneakyThrows
+    public SearchResponseVo search(SearchParam searchParam) {
+        //第一步：封装条件对象
+        SearchRequest searchRequest = this.buildQuery(searchParam);
+        //第二步：执行查询
+        SearchResponse searchResponse = highLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+        //第三步：根据返回的响应对象获取结果
+//        SearchResponseVo searchResponseVo = this.parseSearchResponseVo(searchResponse);
+
+        return null;
+    }
+
+    //封装查询条件
+    private SearchRequest buildQuery(SearchParam searchParam) {
+        //创建查询请求对象 参数：索引库
+        SearchRequest searchRequest = new SearchRequest("goods");
+        //创建条件构建对象
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        //创建多条件对象
+        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+        //判断是否有关键字条件
+        if (!StringUtils.isEmpty(searchParam.getKeyword())) {
+            MatchQueryBuilder title = QueryBuilders.matchQuery("title", searchParam.getKeyword()).operator(Operator.AND);
+            //设置关键字条件到多条件对象
+            boolQueryBuilder.must(title);
+        }
+        //过滤品牌  trademark=2:华为
+        String trademark = searchParam.getTrademark();
+        //判断
+        if (!StringUtils.isEmpty(trademark)) {
+            //split
+            String[] split = trademark.split(":");
+            if (split != null && split.length == 2) {
+                //构建过滤品牌
+                TermQueryBuilder tmId = QueryBuilders.termQuery("tmId", split[0]);
+                //添加到多条件对象
+                boolQueryBuilder.filter(tmId);
+            }
+        }
+
+        //分类
+        if (searchParam.getCategory1Id() != null) {
+            boolQueryBuilder.filter(QueryBuilders.termQuery("category1Id", searchParam.getCategory1Id()));
+        }
+        if (searchParam.getCategory2Id() != null) {
+            boolQueryBuilder.filter(QueryBuilders.termQuery("category2Id", searchParam.getCategory2Id()));
+        }
+        if (searchParam.getCategory3Id() != null) {
+            boolQueryBuilder.filter(QueryBuilders.termQuery("category3Id", searchParam.getCategory3Id()));
+        }
+
+        //平台属性  23:4G:运行内存
+        String[] props = searchParam.getProps();
+        //判断数组是否为空
+        if (props != null && props.length > 0) {
+            for (String prop : props) {
+                //prop 23:4G:运行内存
+                //平台属性Id 平台属性值名称 平台属性名
+                //split  StringUtils.split
+                String[] split = prop.split(":");
+                //判断
+                if (split != null && split.length == 3) {
+                    //创建多条件对象
+                    BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
+                    //子多条件对象
+                    BoolQueryBuilder subBoolQuery = QueryBuilders.boolQuery();
+                    subBoolQuery.must(QueryBuilders.termQuery("attrs.attrValue", split[1]));
+                    subBoolQuery.must(QueryBuilders.termQuery("attrs.attrId", split[0]));
+
+                    //nested
+                    boolQuery.must(QueryBuilders.nestedQuery("attrs", subBoolQuery, ScoreMode.None));
+
+                    //添加到最外层多条件对象
+                    boolQueryBuilder.filter(boolQuery);
+                }
+
+            }
+        }
+
+
+        //添加条件到构建对象
+        searchSourceBuilder.query(boolQueryBuilder);
+
+        //分页
+        //计算索引
+        int index = (searchParam.getPageNo() - 1) * searchParam.getPageSize();
+        searchSourceBuilder.from(index);
+        searchSourceBuilder.size(searchParam.getPageSize());
+        //排序规则 1:desc   1:hotScore 2:price
+        String order = searchParam.getOrder();
+        if (!StringUtils.isEmpty(order)) {
+            String[] split = order.split(":");
+            //定义字段
+            String field = null;
+            //switch
+            switch (split[0]) {
+                case "1":
+                    field = "hotScore";
+                    break;
+                case "2":
+                    field="price";
+                    break;
+            }
+            searchSourceBuilder.sort(field,split[1].equals("asc")?SortOrder.ASC:SortOrder.DESC);
+        } else {//默认热度降序排列
+            searchSourceBuilder.sort("hotScore", SortOrder.DESC);
+        }
+
+        //聚合--品牌
+        TermsAggregationBuilder tmIdAgg = AggregationBuilders.terms("tmIdAgg").field("tmId");
+        tmIdAgg.subAggregation(AggregationBuilders.terms("tmNameAgg").field("tmName"));
+        tmIdAgg.subAggregation(AggregationBuilders.terms("tmLogoUrlAgg").field("tmLogoUrl"));
+
+        searchSourceBuilder.aggregation(tmIdAgg);
+
+        //聚合--平台属性
+        NestedAggregationBuilder nestedAgg = AggregationBuilders.nested("attrAgg", "attrs");
+        //一级子聚合
+        TermsAggregationBuilder attrIdAgg = AggregationBuilders.terms("attrIdAgg").field("attrs.attrId");
+        //添加到父聚合
+        nestedAgg.subAggregation(attrIdAgg);
+        //二级子聚合
+        attrIdAgg.subAggregation(AggregationBuilders.terms("attrNameAgg").field("attrs.attrName"));
+        attrIdAgg.subAggregation(AggregationBuilders.terms("attrValueAgg").field("attrs.attrValue"));
+
+        searchSourceBuilder.aggregation(nestedAgg);
+
+        //高亮
+        HighlightBuilder highlightBuilder=new HighlightBuilder();
+        //指定字段
+        highlightBuilder.field("title");
+        //指定前缀
+        highlightBuilder.preTags("<span style=color:red>");
+        //指定后缀
+        highlightBuilder.postTags("</span>");
+        searchSourceBuilder.highlighter(highlightBuilder);
+        //结果过滤
+        searchSourceBuilder.fetchSource(new String[]{"id","defailtImg","title","price"},null);
+
+        //将构建的条件对象添加到请求中
+        searchRequest.source(searchSourceBuilder);
+        System.out.println("dis:=="+searchSourceBuilder.toString());
+        return searchRequest;
+
     }
 }

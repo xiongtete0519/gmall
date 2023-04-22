@@ -3,13 +3,12 @@ package com.atguigu.gmall.list.controller;
 import com.atguigu.gmall.common.result.Result;
 import com.atguigu.gmall.list.service.SearchService;
 import com.atguigu.gmall.model.list.Goods;
+import com.atguigu.gmall.model.list.SearchParam;
+import com.atguigu.gmall.model.list.SearchResponseVo;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/list")
@@ -20,6 +19,13 @@ public class ListApiController {
 
     @Autowired
     private SearchService searchService;
+
+    @ApiOperation("商品搜索")
+    @PostMapping
+    public Result list(@RequestBody SearchParam searchParam){
+        SearchResponseVo searchResponseVo=searchService.search(searchParam);
+        return Result.ok();
+    }
 
     @ApiOperation("更新商品的热度排名")
     @GetMapping("/inner/incrHotScore/{skuId}")

@@ -26,9 +26,8 @@ public class ProductApiController {
     private BaseTrademarkService trademarkService;
 
     @ApiOperation("根据品牌id获取品牌数据")
-    @GetMapping("/inner/getTrademark/{tmId}")
+    @GetMapping("/getTrademark/{tmId}")
     public BaseTrademark getTrademark(@PathVariable Long tmId){
-
         return trademarkService.getById(tmId);
     }
 
