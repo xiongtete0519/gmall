@@ -2,10 +2,7 @@ package com.atguigu.gmall.list.service.impl;
 
 import com.atguigu.gmall.list.repository.GoodsRepository;
 import com.atguigu.gmall.list.service.SearchService;
-import com.atguigu.gmall.model.list.Goods;
-import com.atguigu.gmall.model.list.SearchAttr;
-import com.atguigu.gmall.model.list.SearchParam;
-import com.atguigu.gmall.model.list.SearchResponseVo;
+import com.atguigu.gmall.model.list.*;
 import com.atguigu.gmall.model.product.BaseAttrInfo;
 import com.atguigu.gmall.model.product.BaseCategoryView;
 import com.atguigu.gmall.model.product.BaseTrademark;
@@ -19,8 +16,13 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.*;
+import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.nested.NestedAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.terms.ParsedLongTerms;
+import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
@@ -33,6 +35,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -155,9 +158,48 @@ public class SearchServiceImpl implements SearchService {
         //第二步：执行查询
         SearchResponse searchResponse = highLevelClient.search(searchRequest, RequestOptions.DEFAULT);
         //第三步：根据返回的响应对象获取结果
-//        SearchResponseVo searchResponseVo = this.parseSearchResponseVo(searchResponse);
+        SearchResponseVo searchResponseVo = this.parseSearchResponseVo(searchResponse);
 
         return null;
+    }
+    //搜索结果集封装
+    private SearchResponseVo parseSearchResponseVo(SearchResponse searchResponse) {
+
+        //创建对象
+        SearchResponseVo searchResponseVo = new SearchResponseVo();
+
+        //品牌数据封装
+        Map<String, Aggregation> aggregationMap = searchResponse.getAggregations().asMap();
+        //获取品牌的聚合结果
+        ParsedLongTerms tmIdAgg = (ParsedLongTerms) aggregationMap.get("tmIdAgg");
+        List<? extends Terms.Bucket> buckets = tmIdAgg.getBuckets();
+        if(!CollectionUtils.isEmpty(buckets)){
+            //获取品牌集合数据
+            List<SearchResponseTmVo> response = buckets.stream().map(bucket -> {
+                //创建品牌对象
+                SearchResponseTmVo searchResponseTmVo = new SearchResponseTmVo();
+                //封装id
+                long tmId = bucket.getKeyAsNumber().longValue();
+                searchResponseTmVo.setTmId(tmId);
+                //封装name
+                Map<String, Aggregation> tmSubAggregation = bucket.getAggregations().asMap();
+                //获取品牌名称聚合对象
+                ParsedStringTerms tmNameAgg = (ParsedStringTerms) tmSubAggregation.get("tmNameAgg");
+                String tmName = tmNameAgg.getBuckets().get(0).getKeyAsString();
+                searchResponseTmVo.setTmName(tmName);
+
+                //封装logoUrl
+                ParsedStringTerms tmLogoUrlAgg = (ParsedStringTerms) tmSubAggregation.get("tmLogoUrlAgg");
+                String tmLogoUrl = tmLogoUrlAgg.getBuckets().get(0).getKeyAsString();
+                searchResponseTmVo.setTmLogoUrl(tmLogoUrl);
+                return searchResponseTmVo;
+            }).collect(Collectors.toList());
+            //设置品牌信息到响应对象
+            searchResponseVo.setTrademarkList(response);
+        }
+
+
+        return searchResponseVo;
     }
 
     //封装查询条件
