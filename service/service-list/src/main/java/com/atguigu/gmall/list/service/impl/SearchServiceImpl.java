@@ -20,6 +20,7 @@ import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.nested.NestedAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.nested.ParsedNested;
 import org.elasticsearch.search.aggregations.bucket.terms.ParsedLongTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
@@ -33,10 +34,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -168,8 +166,9 @@ public class SearchServiceImpl implements SearchService {
         //创建对象
         SearchResponseVo searchResponseVo = new SearchResponseVo();
 
-        //品牌数据封装
+        //获取所有的聚合数据封装
         Map<String, Aggregation> aggregationMap = searchResponse.getAggregations().asMap();
+
         //获取品牌的聚合结果
         ParsedLongTerms tmIdAgg = (ParsedLongTerms) aggregationMap.get("tmIdAgg");
         List<? extends Terms.Bucket> buckets = tmIdAgg.getBuckets();
@@ -196,6 +195,47 @@ public class SearchServiceImpl implements SearchService {
             }).collect(Collectors.toList());
             //设置品牌信息到响应对象
             searchResponseVo.setTrademarkList(response);
+        }
+
+        //封装平台属性集合数据
+        ParsedNested attrAgg = (ParsedNested) aggregationMap.get("attrAgg");
+        //获取id子聚合
+        Map<String, Aggregation> attrSubAggregation = attrAgg.getAggregations().asMap();
+        ParsedLongTerms attrIdAgg = (ParsedLongTerms) attrSubAggregation.get("attrIdAgg");
+        //获取聚合数据
+        List<? extends Terms.Bucket> subBuckets = attrIdAgg.getBuckets();
+        if(!CollectionUtils.isEmpty(subBuckets)){
+            //获取平台属性结果集
+            List<SearchResponseAttrVo> responseAttrVoList = subBuckets.stream().map(subBucket -> {
+                //创建平台封装对象
+                SearchResponseAttrVo searchResponseAttrVo = new SearchResponseAttrVo();
+                //封装平台属性id
+                long attrId = subBucket.getKeyAsNumber().longValue();
+                searchResponseAttrVo.setAttrId(attrId);
+                //获取子聚合数据
+                Map<String, Aggregation> subSubAggregation = subBucket.getAggregations().asMap();
+                //封装平台属性名
+                ParsedStringTerms attrNameAgg = (ParsedStringTerms) subSubAggregation.get("attrNameAgg");
+                String attrName = attrNameAgg.getBuckets().get(0).getKeyAsString();
+                searchResponseAttrVo.setAttrName(attrName);
+
+                //封装平台属性值
+                ParsedStringTerms attrValueAgg = (ParsedStringTerms) subSubAggregation.get("attrValueAgg");
+                //获取属性值的结果集
+                List<? extends Terms.Bucket> attrValueAggBuckets = attrValueAgg.getBuckets();
+                if(!CollectionUtils.isEmpty(attrValueAggBuckets)){
+                    //获取属性值集合
+                    List<String> attrValueList = attrValueAggBuckets.stream().map(attrValueBucket -> {
+
+                        return attrValueBucket.getKeyAsString();
+                    }).collect(Collectors.toList());
+                    //设置属性值集合
+                    searchResponseAttrVo.setAttrValueList(attrValueList);
+                }
+                return searchResponseAttrVo;
+            }).collect(Collectors.toList());
+            //设置到响应对象中
+            searchResponseVo.setAttrsList(responseAttrVoList);
         }
 
 
