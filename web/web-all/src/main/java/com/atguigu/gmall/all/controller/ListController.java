@@ -31,7 +31,27 @@ public class ListController {
         String urlParam=this.makeUrlParam(searchParam);
         model.addAttribute("urlParam",urlParam);
 
+        //面包屑
+        String tradeMarkParam=this.makeTradeMark(searchParam.getTrademark());
+        model.addAttribute("trademarkParam",tradeMarkParam);
+
         return "list/index";
+    }
+
+    //面包屑--品牌
+    private String makeTradeMark(String trademark) {
+        //判断
+        if(!StringUtils.isEmpty(trademark)){
+            //trademark=2:小米
+            String[] split = trademark.split(":");
+            //判断
+            if(split!=null&&split.length==2){
+                return "品牌："+split[1];
+            }
+
+        }
+
+        return "";
     }
 
     //拼接路径

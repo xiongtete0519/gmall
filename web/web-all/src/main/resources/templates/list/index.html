@@ -69,7 +69,7 @@
                 </li>
             </ul>
             <ul class="fl sui-tag">
-                <!--品牌的面包屑-->
+                <!--品牌的面包屑 品牌：小米 X -->
                 <li th:if="${searchParam.trademark != null}" class="with-x">
                     <span th:text="${trademarkParam}"></span>
                     <a th:href="@{${#strings.replace(urlParam+'&order='+searchParam.order,'trademark='+searchParam.trademark,'')}}">×</a>
