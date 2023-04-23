@@ -161,7 +161,16 @@ public class SearchServiceImpl implements SearchService {
         //第三步：根据返回的响应对象获取结果
         SearchResponseVo searchResponseVo = this.parseSearchResponseVo(searchResponse);
 
-        return null;
+        //设置每页条数
+        searchResponseVo.setPageSize(searchParam.getPageSize());
+        //设置当前页
+        searchResponseVo.setPageNo(searchParam.getPageNo());
+        //总页数
+        //总8 每页3  (8+3-1)/3=10/3=3
+        Long totalPage=(searchResponseVo.getTotal()+searchResponseVo.getPageSize()-1)/searchResponseVo.getPageSize();
+        searchResponseVo.setTotalPages(totalPage);
+
+        return searchResponseVo;
     }
     //搜索结果集封装
     private SearchResponseVo parseSearchResponseVo(SearchResponse searchResponse) {
@@ -261,6 +270,9 @@ public class SearchServiceImpl implements SearchService {
         //设置商品集合数据
         searchResponseVo.setGoodsList(goodsList);
 
+        //设置总记录数据
+        long total = searchResponse.getHits().getTotalHits().value;
+        searchResponseVo.setTotal(total);
 
         return searchResponseVo;
     }

@@ -24,7 +24,7 @@ public class ListApiController {
     @PostMapping
     public Result list(@RequestBody SearchParam searchParam){
         SearchResponseVo searchResponseVo=searchService.search(searchParam);
-        return Result.ok();
+        return Result.ok(searchResponseVo);
     }
 
     @ApiOperation("更新商品的热度排名")
