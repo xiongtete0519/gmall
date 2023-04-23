@@ -9,6 +9,9 @@ import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -31,11 +34,38 @@ public class ListController {
         String urlParam=this.makeUrlParam(searchParam);
         model.addAttribute("urlParam",urlParam);
 
-        //面包屑
+        //面包屑--品牌
         String tradeMarkParam=this.makeTradeMark(searchParam.getTrademark());
         model.addAttribute("trademarkParam",tradeMarkParam);
 
+        //面包屑-平台属性
+        List<Map<String,String>> propsParamList=this.makeProps(searchParam.getProps());
+        model.addAttribute("propsParamList",propsParamList);
+
         return "list/index";
+    }
+
+    //构建平台属性面包屑集合数据
+    private List<Map<String, String>> makeProps(String[] props) {
+        //创建集合封装数据
+        List<Map<String, String>> propsList=new ArrayList<>();
+        //判断
+        if(props!=null&&props.length>0){
+            for (String prop : props) {
+                //prop  props=23:4G:运行内存
+                String[] split = prop.split(":");
+                //判断
+                if(split!=null&&split.length==3){
+                    Map<String,String> resultMap=new HashMap<>();
+                    resultMap.put("attrId",split[0]);
+                    resultMap.put("attrName",split[2]);
+                    resultMap.put("attrValue",split[1]);
+
+                    propsList.add(resultMap);
+                }
+            }
+        }
+        return propsList;
     }
 
     //面包屑--品牌

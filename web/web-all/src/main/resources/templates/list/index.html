@@ -74,7 +74,7 @@
                     <span th:text="${trademarkParam}"></span>
                     <a th:href="@{${#strings.replace(urlParam+'&order='+searchParam.order,'trademark='+searchParam.trademark,'')}}">×</a>
                 </li>
-                <!--平台属性面包屑-->
+                <!--平台属性面包屑 屏幕尺寸：70-77英寸-->
                 <li th:if="${searchParam.props != null}" th:each="prop : ${propsParamList}" class="with-x">
                     <span th:text="${prop.attrName}+'：'+${prop.attrValue}"></span>
                     <a th:href="@{${#strings.replace(urlParam+'&order='+searchParam.order,'props='+prop.attrId+':'+prop.attrValue+':'+prop.attrName,'')}}">×</a>
