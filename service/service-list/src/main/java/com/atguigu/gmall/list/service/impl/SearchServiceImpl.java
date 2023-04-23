@@ -1,5 +1,6 @@
 package com.atguigu.gmall.list.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.atguigu.gmall.list.repository.GoodsRepository;
 import com.atguigu.gmall.list.service.SearchService;
 import com.atguigu.gmall.model.list.*;
@@ -16,6 +17,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.*;
+import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
@@ -27,6 +29,7 @@ import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -237,6 +240,26 @@ public class SearchServiceImpl implements SearchService {
             //设置到响应对象中
             searchResponseVo.setAttrsList(responseAttrVoList);
         }
+
+        //封装商品goods数据
+        SearchHit[] hits = searchResponse.getHits().getHits();
+        //定义集合接收goods数据
+        List<Goods> goodsList = new ArrayList<>();
+        //判断
+        if(hits!=null&&hits.length>0){
+            for (SearchHit hit : hits) {
+                Goods goods = JSONObject.parseObject(hit.getSourceAsString(), Goods.class);
+                //获取高亮数据
+                if(hit.getHighlightFields().get("title")!=null){
+                    //获取高亮
+                    HighlightField title = hit.getHighlightFields().get("title");
+                    goods.setTitle(title.getFragments()[0].toString());
+                }
+                goodsList.add(goods);
+            }
+        }
+        //设置商品集合数据
+        searchResponseVo.setGoodsList(goodsList);
 
 
         return searchResponseVo;
