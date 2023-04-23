@@ -27,6 +27,15 @@ public class PassportController {
     @Autowired
     private RedisTemplate redisTemplate;
 
+    @GetMapping("logout")
+    public Result logout(HttpServletRequest request){
+        //清除redis中的数据
+        redisTemplate.delete(RedisConst.USER_LOGIN_KEY_PREFIX+request.getHeader("token"));
+
+        return Result.ok();
+    }
+
+
     @PostMapping("/login")
     public Result logout(@RequestBody UserInfo userInfo, HttpServletRequest request) {
 
