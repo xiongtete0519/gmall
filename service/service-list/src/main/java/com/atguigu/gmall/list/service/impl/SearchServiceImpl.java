@@ -402,7 +402,7 @@ public class SearchServiceImpl implements SearchService {
         highlightBuilder.postTags("</span>");
         searchSourceBuilder.highlighter(highlightBuilder);
         //结果过滤
-        searchSourceBuilder.fetchSource(new String[]{"id","defailtImg","title","price"},null);
+        searchSourceBuilder.fetchSource(new String[]{"id","defaultImg","title","price"},null);
 
         //将构建的条件对象添加到请求中
         searchRequest.source(searchSourceBuilder);

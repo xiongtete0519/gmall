@@ -42,7 +42,30 @@ public class ListController {
         List<Map<String,String>> propsParamList=this.makeProps(searchParam.getProps());
         model.addAttribute("propsParamList",propsParamList);
 
+        //排序处理
+        Map<String,String> orderMap=this.makeOrder(searchParam.getOrder());
+        model.addAttribute("orderMap",orderMap);
+
         return "list/index";
+    }
+
+    //排序处理
+    //order=1:desc  --map
+    private Map<String, String> makeOrder(String order) {
+        Map<String,String> resultMap=new HashMap<>();
+        if(!StringUtils.isEmpty(order)){
+            String[] split = order.split(":");
+            //判断
+            if(split!=null&&split.length==2){
+                resultMap.put("type",split[0]);
+                resultMap.put("sort",split[1]);
+            }
+        }else{
+            resultMap.put("type","1");
+            resultMap.put("sort","desc");
+        }
+
+        return resultMap;
     }
 
     //构建平台属性面包屑集合数据
