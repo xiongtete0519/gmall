@@ -85,15 +85,43 @@ public class AuthGlobalFilter implements GlobalFilter {
                 }
             }
         }
+
+        //获取临时id
+        String userTempId=this.getUserTempId(request);
+
         //存储userId到请求
-        if(!StringUtils.isEmpty(userId)){
-            //存储到request
-            request.mutate().header("userId",userId).build();
+        if(!StringUtils.isEmpty(userId)||!StringUtils.isEmpty(userTempId)){
+
+            if(!StringUtils.isEmpty(userId)){
+                //存储到request
+                request.mutate().header("userId",userId).build();
+            }
+            if(!StringUtils.isEmpty(userTempId)){
+                //存储到request
+                request.mutate().header("userTempId",userId).build();
+            }
             return chain.filter(exchange.mutate().request(request).build());
         }
 
         //放行
         return chain.filter(exchange);
+    }
+
+    ////获取用户临时id
+    private String getUserTempId(ServerHttpRequest request) {
+        String userTempId="";
+        //从头信息
+        List<String> list = request.getHeaders().get("userTempId");
+        //判断
+        if(!CollectionUtils.isEmpty(list)){
+            userTempId=list.get(0);
+        }
+        //判断，从cookie中取
+        if(StringUtils.isEmpty(userTempId)){
+            userTempId=request.getCookies().getFirst("userTempId").getValue();
+        }
+
+        return userTempId;
     }
 
     /**
