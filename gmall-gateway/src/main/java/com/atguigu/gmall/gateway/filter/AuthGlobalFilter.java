@@ -98,7 +98,7 @@ public class AuthGlobalFilter implements GlobalFilter {
             }
             if(!StringUtils.isEmpty(userTempId)){
                 //存储到request
-                request.mutate().header("userTempId",userId).build();
+                request.mutate().header("userTempId",userTempId).build();
             }
             return chain.filter(exchange.mutate().request(request).build());
         }
@@ -118,7 +118,11 @@ public class AuthGlobalFilter implements GlobalFilter {
         }
         //判断，从cookie中取
         if(StringUtils.isEmpty(userTempId)){
-            userTempId=request.getCookies().getFirst("userTempId").getValue();
+//            userTempId=request.getCookies().getFirst("userTempId").getValue();
+            HttpCookie cookie = request.getCookies().getFirst("userTempId");
+            if(cookie!=null){
+                userTempId=cookie.getValue();
+            }
         }
 
         return userTempId;
