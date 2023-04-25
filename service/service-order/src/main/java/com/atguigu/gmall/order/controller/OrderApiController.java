@@ -7,14 +7,13 @@ import com.atguigu.gmall.model.cart.CartInfo;
 import com.atguigu.gmall.model.order.OrderDetail;
 import com.atguigu.gmall.model.order.OrderInfo;
 import com.atguigu.gmall.model.user.UserAddress;
+import com.atguigu.gmall.order.service.OrderService;
 import com.atguigu.gmall.product.client.ProductFeignClient;
 import com.atguigu.gmall.user.client.UserFeignClient;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
@@ -35,6 +34,21 @@ public class OrderApiController {
 
     @Autowired
     private ProductFeignClient productFeignClient;
+
+    @Autowired
+    private OrderService orderService;
+
+    @ApiOperation("提交订单")
+    @PostMapping("/auth/submitOrder")
+    public Result submitOrder(@RequestBody OrderInfo orderInfo,HttpServletRequest request){
+
+        //获取用户id
+        String userId = AuthContextHolder.getUserId(request);
+        orderInfo.setUserId(Long.parseLong(userId));
+
+        Long orderId=orderService.submitOrder(orderInfo);
+        return Result.ok(orderId);
+    }
 
     @ApiOperation("去结算")
     @GetMapping("/auth/trade")
