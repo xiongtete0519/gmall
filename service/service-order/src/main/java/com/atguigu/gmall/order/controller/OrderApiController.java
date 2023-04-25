@@ -44,9 +44,18 @@ public class OrderApiController {
 
         //获取用户id
         String userId = AuthContextHolder.getUserId(request);
+        //校验流水号
+        String tradeNo = request.getParameter("tradeNo");
+        boolean result = orderService.checkTradeCode(userId, tradeNo);
+        if(!result){
+            return Result.fail().message("不能重复提交订单");
+        }
         orderInfo.setUserId(Long.parseLong(userId));
 
         Long orderId=orderService.submitOrder(orderInfo);
+
+        //删除流水号
+        orderService.deleteTradeCode(userId);
         return Result.ok(orderId);
     }
 
@@ -91,6 +100,11 @@ public class OrderApiController {
         resultMap.put("detailArrayList",orderDetailList);
         resultMap.put("totalNum",skuNum);
         resultMap.put("totalAmount",orderInfo.getTotalAmount());
+
+        //携带流水号
+        String tradeNo = orderService.getTradeNo(userId);
+        //存储流水号
+        resultMap.put("tradeNo",tradeNo);
 
 
         return Result.ok(resultMap);

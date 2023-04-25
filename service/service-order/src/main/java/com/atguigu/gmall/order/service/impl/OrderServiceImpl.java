@@ -1,5 +1,6 @@
 package com.atguigu.gmall.order.service.impl;
 
+import com.atguigu.gmall.common.constant.RedisConst;
 import com.atguigu.gmall.common.util.AuthContextHolder;
 import com.atguigu.gmall.model.enums.OrderStatus;
 import com.atguigu.gmall.model.enums.PaymentWay;
@@ -10,8 +11,10 @@ import com.atguigu.gmall.order.mapper.OrderDetailMapper;
 import com.atguigu.gmall.order.mapper.OrderInfoMapper;
 import com.atguigu.gmall.order.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Calendar;
@@ -27,6 +30,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private OrderDetailMapper orderDetailMapper;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     /**
      * 提交订单
@@ -85,7 +91,48 @@ public class OrderServiceImpl implements OrderService {
             orderDetailMapper.insert(orderDetail);
         }
 
+        //删除购物车 --为了测试这里不删除
+        //redisTemplate.delete(RedisConst.USER_KEY_PREFIX+orderInfo.getUserId()+RedisConst.USER_CART_KEY_SUFFIX);
+
         //返回订单id
         return orderInfo.getId();
+    }
+
+    /**
+     * 生成流水号
+     * 1、生成后返回页面
+     * 2、生成后存储到redis
+     * @param userId
+     * @return
+     */
+    @Override
+    public String getTradeNo(String userId) {
+        String tradeNo=UUID.randomUUID().toString().replaceAll("-","");
+        //存储到redis
+        String tradeNoKey="user:"+userId+":tradeno";
+        //存储
+        redisTemplate.opsForValue().set(tradeNoKey,tradeNo);
+        return tradeNo;
+    }
+
+    //校验流水号
+    @Override
+    public boolean checkTradeCode(String userId, String tradeNoCode) {
+        //获取redis中的tradeNo
+        String tradeNoKey="user:"+userId+":tradeno";
+        String redisTradeNo = (String) redisTemplate.opsForValue().get(tradeNoKey);
+        //判断
+        if(StringUtils.isEmpty(redisTradeNo)){
+            return false;
+        }
+        return redisTradeNo.equals(tradeNoCode);
+    }
+
+    //删除流水号
+    @Override
+    public void deleteTradeCode(String userId) {
+        //获取redis中的tradeNo
+        String tradeNoKey="user:"+userId+":tradeno";
+        redisTemplate.delete(tradeNoKey);
     }
 }
