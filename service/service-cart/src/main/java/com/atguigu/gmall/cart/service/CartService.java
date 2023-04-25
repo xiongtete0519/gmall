@@ -16,4 +16,7 @@ public interface CartService {
 
     //删除购物车
     void deleteCart(String userId, Long skuId);
+
+    //获取选中的购物车列表
+    List<CartInfo> getCartCheckedList(String userId);
 }

@@ -19,6 +19,12 @@ public class CartApiController {
     @Autowired
     private CartService cartService;
 
+    @ApiOperation("获取选中的购物车列表")
+    @GetMapping("/getCartCheckedList/{userId}")
+    public List<CartInfo> getCartCheckedList(@PathVariable String userId){
+        return cartService.getCartCheckedList(userId);
+    }
+
     @ApiOperation("删除购物车")
     @DeleteMapping("/deleteCart/{skuId}")
     public Result deleteCart(@PathVariable Long skuId,HttpServletRequest request){

@@ -14,6 +14,8 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @Service
 @SuppressWarnings("all")
@@ -207,6 +209,27 @@ public class CartServiceImpl implements CartService {
     public void deleteCart(String userId, Long skuId) {
         //获取数据列表
         redisTemplate.boundHashOps(this.getKey(userId)).delete(skuId.toString());
+    }
+
+    //获取选中的购物车列表
+    @Override
+    public List<CartInfo> getCartCheckedList(String userId) {
+        //定义变量接收结果
+        List<CartInfo> cartInfos=new ArrayList<>();
+
+        //获取所有数据
+        BoundHashOperations<String,String,CartInfo> boundHashOps = redisTemplate.boundHashOps(this.getKey(userId));
+
+        List<CartInfo> cartInfoList=boundHashOps.values();
+        //判断处理
+        if(!CollectionUtils.isEmpty(cartInfoList)){
+             cartInfos = cartInfoList.stream().filter(cartInfo -> {
+                //判断是否选中
+//                return cartInfo.getIsChecked().intValue()==1;
+                 return "1".equals(String.valueOf(cartInfo.getIsChecked()));
+            }).collect(Collectors.toList());
+        }
+        return cartInfoList;
     }
 
     //获取操作购物车的key  user:userId:cart
