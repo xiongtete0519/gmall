@@ -13,4 +13,7 @@ public interface CartService {
 
     //更改选中状态
     void checkCart(String userId, Long skuId, Integer isChecked);
+
+    //删除购物车
+    void deleteCart(String userId, Long skuId);
 }

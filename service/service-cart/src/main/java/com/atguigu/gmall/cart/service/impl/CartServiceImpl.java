@@ -202,6 +202,13 @@ public class CartServiceImpl implements CartService {
 
     }
 
+    //删除购物车
+    @Override
+    public void deleteCart(String userId, Long skuId) {
+        //获取数据列表
+        redisTemplate.boundHashOps(this.getKey(userId)).delete(skuId.toString());
+    }
+
     //获取操作购物车的key  user:userId:cart
     private String getKey(String userId) {
         return RedisConst.USER_KEY_PREFIX + userId + RedisConst.USER_CART_KEY_SUFFIX;
