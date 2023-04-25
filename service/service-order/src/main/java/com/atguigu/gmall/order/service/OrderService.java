@@ -14,4 +14,7 @@ public interface OrderService {
 
     //删除流水号
     void deleteTradeCode(String userId);
+
+    //校验库存
+    boolean checkStock(String skuId,String skuNum);
 }

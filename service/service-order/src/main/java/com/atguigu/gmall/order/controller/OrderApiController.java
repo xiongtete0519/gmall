@@ -50,6 +50,20 @@ public class OrderApiController {
         if(!result){
             return Result.fail().message("不能重复提交订单");
         }
+        //验证库存
+        List<OrderDetail> orderDetailList = orderInfo.getOrderDetailList();
+        if(!CollectionUtils.isEmpty(orderDetailList)){
+            for (OrderDetail orderDetail : orderDetailList) {
+                //验证库存
+                boolean flag = orderService.checkStock(String.valueOf(orderDetail.getSkuId()),
+                        String.valueOf(orderDetail.getSkuNum()));
+                //处理
+                if(!flag){
+                    return Result.fail().message(orderDetail.getSkuId()+orderDetail.getSkuName()+"库存不足！");
+                }
+            }
+        }
+
         orderInfo.setUserId(Long.parseLong(userId));
 
         Long orderId=orderService.submitOrder(orderInfo);

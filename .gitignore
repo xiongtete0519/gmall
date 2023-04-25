@@ -24,6 +24,7 @@ mvnw
 .mvn
 java1234-admin.iml
 HELP.md
+/ware-manage/
 
 ### NetBeans ###
 /nbproject/private/

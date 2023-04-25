@@ -2,6 +2,7 @@ package com.atguigu.gmall.order.service.impl;
 
 import com.atguigu.gmall.common.constant.RedisConst;
 import com.atguigu.gmall.common.util.AuthContextHolder;
+import com.atguigu.gmall.common.util.HttpClientUtil;
 import com.atguigu.gmall.model.enums.OrderStatus;
 import com.atguigu.gmall.model.enums.PaymentWay;
 import com.atguigu.gmall.model.enums.ProcessStatus;
@@ -11,6 +12,7 @@ import com.atguigu.gmall.order.mapper.OrderDetailMapper;
 import com.atguigu.gmall.order.mapper.OrderInfoMapper;
 import com.atguigu.gmall.order.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +35,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private RedisTemplate redisTemplate;
+
+    @Value("${ware.url}")
+    public String wareUrl;
 
     /**
      * 提交订单
@@ -134,5 +139,14 @@ public class OrderServiceImpl implements OrderService {
         //获取redis中的tradeNo
         String tradeNoKey="user:"+userId+":tradeno";
         redisTemplate.delete(tradeNoKey);
+    }
+
+    ////校验库存
+    @Override
+    public boolean checkStock(String skuId, String skuNum) {
+        //http请求 http://localhost:9001/hasStock?skuId=22&num=200
+        String result = HttpClientUtil.doGet(wareUrl+"/hasStock?skuId="+skuId+"&num="+skuNum);
+
+        return "1".equals(result);
     }
 }
