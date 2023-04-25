@@ -224,6 +224,10 @@ public class CartServiceImpl implements CartService {
         //判断处理
         if(!CollectionUtils.isEmpty(cartInfoList)){
              cartInfos = cartInfoList.stream().filter(cartInfo -> {
+
+                 //更新价格
+                 cartInfo.setSkuPrice(productFeignClient.getSkuPrice(cartInfo.getSkuId()));
+
                 //判断是否选中
 //                return cartInfo.getIsChecked().intValue()==1;
                  return "1".equals(String.valueOf(cartInfo.getIsChecked()));

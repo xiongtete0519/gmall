@@ -1,6 +1,7 @@
 package com.atguigu.gmall.order.controller;
 
 import com.atguigu.gmall.cart.client.CartFeignClient;
+import com.atguigu.gmall.common.constant.RedisConst;
 import com.atguigu.gmall.common.result.Result;
 import com.atguigu.gmall.common.util.AuthContextHolder;
 import com.atguigu.gmall.model.cart.CartInfo;
@@ -12,10 +13,13 @@ import com.atguigu.gmall.product.client.ProductFeignClient;
 import com.atguigu.gmall.user.client.UserFeignClient;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.BoundHashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +41,9 @@ public class OrderApiController {
 
     @Autowired
     private OrderService orderService;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     @ApiOperation("提交订单")
     @PostMapping("/auth/submitOrder")
@@ -61,6 +68,22 @@ public class OrderApiController {
                 if(!flag){
                     return Result.fail().message(orderDetail.getSkuId()+orderDetail.getSkuName()+"库存不足！");
                 }
+                //校验价格 缓存和mysql
+                //获取实时价格
+                BigDecimal skuPrice = productFeignClient.getSkuPrice(orderDetail.getSkuId());
+                //比较
+                if(orderDetail.getOrderPrice().compareTo(skuPrice)!=0){
+                    //设置新的内容
+                    List<CartInfo> cartCheckedList = cartFeignClient.getCartCheckedList(userId);
+                    //更新到缓存
+                    cartCheckedList.forEach(CartInfo->{
+                        BoundHashOperations<String,String,CartInfo> boundHashOps = redisTemplate.boundHashOps(RedisConst.USER_KEY_PREFIX + userId + RedisConst.USER_CART_KEY_SUFFIX);
+                        boundHashOps.put(CartInfo.getSkuId().toString(),CartInfo);
+                    });
+
+                    return Result.fail().message(orderDetail.getSkuId()+"价格有变动");
+                }
+
             }
         }
 
