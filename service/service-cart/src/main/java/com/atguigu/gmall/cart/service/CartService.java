@@ -10,4 +10,7 @@ public interface CartService {
 
     //展示购物车
     List<CartInfo> cartList(String userId, String userTempId);
+
+    //更改选中状态
+    void checkCart(String userId, Long skuId, Integer isChecked);
 }

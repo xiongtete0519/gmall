@@ -186,6 +186,22 @@ public class CartServiceImpl implements CartService {
 //        return cartInfoList;
     }
 
+    //更改选中状态
+    @Override
+    public void checkCart(String userId, Long skuId, Integer isChecked) {
+        //获取数据列表
+        BoundHashOperations<String,String,CartInfo> boundHashOps = redisTemplate.boundHashOps(this.getKey(userId));
+        //判断skuId是否存在
+        if(boundHashOps.hasKey(skuId.toString())){
+            CartInfo cartInfo = boundHashOps.get(skuId.toString());
+            //修改状态
+            cartInfo.setIsChecked(isChecked);
+            //更新
+            boundHashOps.put(skuId.toString(),cartInfo);
+        }
+
+    }
+
     //获取操作购物车的key  user:userId:cart
     private String getKey(String userId) {
         return RedisConst.USER_KEY_PREFIX + userId + RedisConst.USER_CART_KEY_SUFFIX;
