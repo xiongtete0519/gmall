@@ -11,6 +11,8 @@ import com.atguigu.gmall.model.order.OrderInfo;
 import com.atguigu.gmall.order.mapper.OrderDetailMapper;
 import com.atguigu.gmall.order.mapper.OrderInfoMapper;
 import com.atguigu.gmall.order.service.OrderService;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -21,6 +23,7 @@ import org.springframework.util.StringUtils;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -148,5 +151,17 @@ public class OrderServiceImpl implements OrderService {
         String result = HttpClientUtil.doGet(wareUrl+"/hasStock?skuId="+skuId+"&num="+skuNum);
 
         return "1".equals(result);
+    }
+
+    //我的订单
+    @Override
+    public IPage<OrderInfo> getOrderPageByUserId(Page<OrderInfo> orderInfoPage, String userId) {
+        IPage<OrderInfo> orderInfoIPage = orderInfoMapper.selectOrderPageByUserId(orderInfoPage, userId);
+        List<OrderInfo> records = orderInfoIPage.getRecords();
+        records.stream().forEach(orderInfo -> {
+            //设置订单状态
+            orderInfo.setOrderStatusName(OrderStatus.getStatusNameByStatus(orderInfo.getOrderStatus()));
+        });
+        return orderInfoPage;
     }
 }

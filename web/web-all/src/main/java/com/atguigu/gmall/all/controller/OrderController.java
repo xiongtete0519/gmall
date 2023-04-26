@@ -16,6 +16,12 @@ public class OrderController {
     @Autowired
     private OrderFeignClient orderFeignClient;
 
+    //跳转我的订单
+    @GetMapping("/myOrder.html")
+    public String myOrder(){
+        return "order/myOrder";
+    }
+
     //去结算
     @GetMapping("/trade.html")
     public String trade(Model model){

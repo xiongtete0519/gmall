@@ -11,6 +11,8 @@ import com.atguigu.gmall.model.user.UserAddress;
 import com.atguigu.gmall.order.service.OrderService;
 import com.atguigu.gmall.product.client.ProductFeignClient;
 import com.atguigu.gmall.user.client.UserFeignClient;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +50,20 @@ public class OrderApiController {
 
     @Autowired
     private ThreadPoolExecutor executor;
+
+    @ApiOperation("我的订单")
+    @GetMapping("/auth/{page}/{limit}")
+    public Result getOrderPageByUserId(@PathVariable Long page,@PathVariable Long limit,HttpServletRequest request){
+        //获取用户id
+        String userId = AuthContextHolder.getUserId(request);
+        //处理分页参数
+        Page<OrderInfo> orderInfoPage=new Page<>(page,limit);
+
+        IPage<OrderInfo> orderInfoIPage=orderService.getOrderPageByUserId(orderInfoPage,userId);
+
+
+        return Result.ok(orderInfoIPage);
+    }
 
     @ApiOperation("提交订单")
     @PostMapping("/auth/submitOrder")
