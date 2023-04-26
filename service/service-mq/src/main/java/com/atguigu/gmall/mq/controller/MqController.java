@@ -17,7 +17,7 @@ public class MqController {
     //发送消息的方法
     @GetMapping("/send")
     public Result send(){
-        rabbitService.sendMessage("exchange.confirm","routingKey.confirm","你好，我是消息，我来了");
+        rabbitService.sendMessage("exchange.confirm888","routingKey.confirm","你好，我是消息，我来了");
         return Result.ok();
     }
 

@@ -14,7 +14,7 @@ public class ConfirmReceiver {
 
     @SneakyThrows
     @RabbitListener(bindings = @QueueBinding(
-            value =@Queue(value = "queue.confirm",durable = "true",autoDelete = "fakse"),
+            value =@Queue(value = "queue.confirm",durable = "true",autoDelete = "false"),
             exchange =@Exchange(value ="exchange.confirm",autoDelete = "false"),
             key = {"routingKey.confirm"}
     ))
