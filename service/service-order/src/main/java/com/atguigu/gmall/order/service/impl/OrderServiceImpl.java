@@ -3,6 +3,7 @@ package com.atguigu.gmall.order.service.impl;
 import com.atguigu.gmall.common.constant.RedisConst;
 import com.atguigu.gmall.common.util.AuthContextHolder;
 import com.atguigu.gmall.common.util.HttpClientUtil;
+import com.atguigu.gmall.constant.MqConst;
 import com.atguigu.gmall.model.enums.OrderStatus;
 import com.atguigu.gmall.model.enums.PaymentWay;
 import com.atguigu.gmall.model.enums.ProcessStatus;
@@ -11,8 +12,10 @@ import com.atguigu.gmall.model.order.OrderInfo;
 import com.atguigu.gmall.order.mapper.OrderDetailMapper;
 import com.atguigu.gmall.order.mapper.OrderInfoMapper;
 import com.atguigu.gmall.order.service.OrderService;
+import com.atguigu.gmall.service.RabbitService;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -28,7 +31,7 @@ import java.util.UUID;
 
 @Service
 @SuppressWarnings("all")
-public class OrderServiceImpl implements OrderService {
+public class OrderServiceImpl extends ServiceImpl<OrderInfoMapper,OrderInfo> implements OrderService {
 
     @Autowired
     private OrderInfoMapper orderInfoMapper;
@@ -39,8 +42,12 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private RedisTemplate redisTemplate;
 
+    @Autowired
+    private RabbitService rabbitService;
+
     @Value("${ware.url}")
     public String wareUrl;
+
 
     /**
      * 提交订单
@@ -102,6 +109,11 @@ public class OrderServiceImpl implements OrderService {
         //删除购物车 --为了测试这里不删除
         //redisTemplate.delete(RedisConst.USER_KEY_PREFIX+orderInfo.getUserId()+RedisConst.USER_CART_KEY_SUFFIX);
 
+        //发送消息
+        rabbitService.sendDelayedMessage(MqConst.EXCHANGE_DIRECT_ORDER_CANCEL,
+                MqConst.ROUTING_ORDER_CANCEL,
+                orderInfo.getId(),
+                MqConst.DELAY_TIME);
         //返回订单id
         return orderInfo.getId();
     }
@@ -144,7 +156,7 @@ public class OrderServiceImpl implements OrderService {
         redisTemplate.delete(tradeNoKey);
     }
 
-    ////校验库存
+    //校验库存
     @Override
     public boolean checkStock(String skuId, String skuNum) {
         //http请求 http://localhost:9001/hasStock?skuId=22&num=200
@@ -163,5 +175,25 @@ public class OrderServiceImpl implements OrderService {
             orderInfo.setOrderStatusName(OrderStatus.getStatusNameByStatus(orderInfo.getOrderStatus()));
         });
         return orderInfoPage;
+    }
+
+    //处理超时订单
+    @Override
+    public void execExpiredOrder(Long orderId) {
+        //关闭订单
+        this.updateOrderStatus(orderId,ProcessStatus.CLOSED);
+    }
+
+    //修改订单状态
+    @Override
+    public void updateOrderStatus(Long orderId, ProcessStatus processStatus) {
+        OrderInfo orderInfo = new OrderInfo();
+        orderInfo.setId(orderId);
+        //修改订单状态
+        orderInfo.setOrderStatus(processStatus.getOrderStatus().name());
+        //修改订单进度状态
+        orderInfo.setProcessStatus(processStatus.name());
+
+        orderInfoMapper.updateById(orderInfo);
     }
 }

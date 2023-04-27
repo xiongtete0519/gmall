@@ -1,10 +1,12 @@
 package com.atguigu.gmall.order.service;
 
+import com.atguigu.gmall.model.enums.ProcessStatus;
 import com.atguigu.gmall.model.order.OrderInfo;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.IService;
 
-public interface OrderService {
+public interface OrderService extends IService<OrderInfo> {
     //提交订单
     Long submitOrder(OrderInfo orderInfo);
 
@@ -22,4 +24,9 @@ public interface OrderService {
 
     //我的订单
     IPage<OrderInfo> getOrderPageByUserId(Page<OrderInfo> orderInfoPage, String userId);
+
+    //处理超时订单
+    void execExpiredOrder(Long orderId);
+    //修改订单状态
+    void updateOrderStatus(Long orderId, ProcessStatus closed);
 }
