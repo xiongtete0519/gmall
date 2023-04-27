@@ -39,8 +39,8 @@ public class MQProducerAckConfig implements RabbitTemplate.ConfirmCallback,Rabbi
             log.info("消息发送成功：" + JSON.toJSONString(correlationData));
         } else {
             log.info("消息发送失败：" + cause + " 数据：" + JSON.toJSONString(correlationData));
+            this.retryMessage(correlationData);
         }
-        this.retryMessage(correlationData);
     }
 
     /**
