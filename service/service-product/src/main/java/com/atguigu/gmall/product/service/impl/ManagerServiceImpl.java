@@ -3,9 +3,11 @@ package com.atguigu.gmall.product.service.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.atguigu.gmall.common.cache.GmallCache;
 import com.atguigu.gmall.common.constant.RedisConst;
+import com.atguigu.gmall.constant.MqConst;
 import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.mapper.*;
 import com.atguigu.gmall.product.service.ManagerService;
+import com.atguigu.gmall.service.RabbitService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -83,6 +85,9 @@ public class ManagerServiceImpl implements ManagerService {
 
     @Autowired
     private RedissonClient redissonClient;
+
+    @Autowired
+    private RabbitService rabbitService;
 
     //查询一级分类
     @Override
@@ -354,6 +359,12 @@ public class ManagerServiceImpl implements ManagerService {
         //设置修改的内容
         skuInfo.setIsSale(1);
         skuInfoMapper.updateById(skuInfo);
+
+        //发送消息
+        rabbitService.sendMessage(
+                MqConst.EXCHANGE_DIRECT_GOODS,
+                MqConst.ROUTING_GOODS_UPPER,
+                skuId);
     }
 
     //商品的下架：将is_sale改为0
@@ -366,6 +377,12 @@ public class ManagerServiceImpl implements ManagerService {
         //设置修改的内容
         skuInfo.setIsSale(0);
         skuInfoMapper.updateById(skuInfo);
+
+        //发送消息
+        rabbitService.sendMessage(
+                MqConst.EXCHANGE_DIRECT_GOODS,
+                MqConst.ROUTING_GOODS_LOWER,
+                skuId);
     }
 
     //根据skuId查询skuInfo信息和图片列表
