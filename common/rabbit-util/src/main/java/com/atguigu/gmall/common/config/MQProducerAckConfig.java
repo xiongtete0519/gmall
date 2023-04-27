@@ -9,12 +9,13 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
 
 @Slf4j
 @Component
-public class MQProducerAckConfig implements RabbitTemplate.ConfirmCallback,RabbitTemplate.ReturnCallback {
+public class MQProducerAckConfig implements RabbitTemplate.ConfirmCallback, RabbitTemplate.ReturnCallback {
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
@@ -23,12 +24,14 @@ public class MQProducerAckConfig implements RabbitTemplate.ConfirmCallback,Rabbi
     private RedisTemplate redisTemplate;
 
     @PostConstruct
-    public void init(){
+    public void init() {
         this.rabbitTemplate.setConfirmCallback(this);
         this.rabbitTemplate.setReturnCallback(this);
     }
+
     /**
      * 确认消息是否到达交换机
+     *
      * @param correlationData
      * @param ack
      * @param cause
@@ -45,33 +48,47 @@ public class MQProducerAckConfig implements RabbitTemplate.ConfirmCallback,Rabbi
 
     /**
      * 实现重试方法
+     *
      * @param correlationData
      */
     private void retryMessage(CorrelationData correlationData) {
         //转换
-        GmallCorrelationData gmallCorrelationData= (GmallCorrelationData) correlationData;
+        GmallCorrelationData gmallCorrelationData = (GmallCorrelationData) correlationData;
         //获取重试次数
         int retryCount = gmallCorrelationData.getRetryCount();
         //判断
-        if(retryCount>3){
+        if (retryCount > 3) {
             System.out.println("重试次数已到，结束吧");
-        }else{
-            retryCount+=1;
+        } else {
+            retryCount += 1;
             gmallCorrelationData.setRetryCount(retryCount);
-            //更新redis
-            redisTemplate.opsForValue().set(gmallCorrelationData.getId(),JSON.toJSONString(gmallCorrelationData));
-            System.out.println("重试次数:\t"+retryCount);
-            //重新发送
-            rabbitTemplate.convertAndSend(
-                    gmallCorrelationData.getExchange(),
-                    gmallCorrelationData.getRoutingKey(),
-                    gmallCorrelationData.getMessage(),
-                    gmallCorrelationData);
+            //判断是否延迟
+            if (gmallCorrelationData.isDelay()) {
+                rabbitTemplate.convertAndSend(
+                        gmallCorrelationData.getExchange(),
+                        gmallCorrelationData.getRoutingKey(),
+                        gmallCorrelationData.getMessage(),
+                        message -> {
+                            message.getMessageProperties().setDelay(gmallCorrelationData.getDelayTime()*1000);
+                            return  message;
+                        },gmallCorrelationData);
+            } else {
+                //更新redis
+                redisTemplate.opsForValue().set(gmallCorrelationData.getId(), JSON.toJSONString(gmallCorrelationData));
+                System.out.println("重试次数:\t" + retryCount);
+                //重新发送
+                rabbitTemplate.convertAndSend(
+                        gmallCorrelationData.getExchange(),
+                        gmallCorrelationData.getRoutingKey(),
+                        gmallCorrelationData.getMessage(),
+                        gmallCorrelationData);
+            }
         }
     }
 
     /**
      * 消息没有正确到达队列时触发回调，如果正确到达队列不执行
+     *
      * @param message
      * @param replyCode
      * @param replyText
@@ -89,11 +106,13 @@ public class MQProducerAckConfig implements RabbitTemplate.ConfirmCallback,Rabbi
 
         //从redis中获取数据
         String correlationDataId = (String) message.getMessageProperties().getHeaders().get("spring_returned_message_correlation");
-        String strJson = (String) redisTemplate.opsForValue().get(correlationDataId);
+        if (!StringUtils.isEmpty(correlationDataId)) {
+            String strJson = (String) redisTemplate.opsForValue().get(correlationDataId);
 
-        GmallCorrelationData gmallCorrelationData = JSON.parseObject(strJson, GmallCorrelationData.class);
+            GmallCorrelationData gmallCorrelationData = JSON.parseObject(strJson, GmallCorrelationData.class);
 
-        //调用重试方法
-        this.retryMessage(gmallCorrelationData);
+            //调用重试方法
+            this.retryMessage(gmallCorrelationData);
+        }
     }
 }

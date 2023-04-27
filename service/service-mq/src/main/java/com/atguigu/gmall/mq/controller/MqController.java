@@ -2,7 +2,12 @@ package com.atguigu.gmall.mq.controller;
 
 import com.atguigu.gmall.common.result.Result;
 import com.atguigu.gmall.mq.config.DeadLetterMqConfig;
+import com.atguigu.gmall.mq.config.DelayedMqConfig;
 import com.atguigu.gmall.service.RabbitService;
+import org.springframework.amqp.AmqpException;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessagePostProcessor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +22,36 @@ public class MqController {
     @Autowired
     private RabbitService rabbitService;
 
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
+
+    @GetMapping("sendDelayed")
+    public Result sendDelayed(){
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        //封装后的api
+        rabbitService.sendDelayedMessage(DelayedMqConfig.exchange_delay,DelayedMqConfig.routing_delay,"我是延迟插件的消息",10);
+        System.out.println("延迟插件消息发送时间：\t"+dateTimeFormatter.format(LocalDateTime.now()));
+        //        rabbitTemplate.convertAndSend(DelayedMqConfig.exchange_delay,
+//                DelayedMqConfig.routing_delay,
+//                "我是延迟插件的消息", new MessagePostProcessor() {
+//                    @Override
+//                    public Message postProcessMessage(Message message) throws AmqpException {
+//
+//                        //设置消息的延迟时间
+//                        message.getMessageProperties().setDelay(10*1000);
+//
+//                        System.out.println("延迟插件消息发送时间：\t"+dateTimeFormatter.format(LocalDateTime.now()));
+//                        return message;
+//                    }
+//                });
+
+
+        return Result.ok();
+    }
+
+    //发送延迟消息-死信队列
     @GetMapping("/sendDeadLetter")
     public Result sendDeadLetter(){
         //时间格式化
