@@ -26,9 +26,10 @@ public class MqController {
     private RabbitTemplate rabbitTemplate;
 
 
-    @GetMapping("sendDelayed")
+    @GetMapping("/sendDelayed")
     public Result sendDelayed(){
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+//        System.out.println("延迟插件消息发送时间：\t"+dateTimeFormatter.format(LocalDateTime.now()));
 
         //封装后的api
         rabbitService.sendDelayedMessage(DelayedMqConfig.exchange_delay,DelayedMqConfig.routing_delay,"我是延迟插件的消息",10);
@@ -67,6 +68,7 @@ public class MqController {
     //发送消息的方法
     @GetMapping("/send")
     public Result send(){
+        System.out.println("测试时间:"+LocalDateTime.now());
         rabbitService.sendMessage("exchange.confirm888","routingKey.confirm","你好，我是消息，我来了");
         return Result.ok();
     }

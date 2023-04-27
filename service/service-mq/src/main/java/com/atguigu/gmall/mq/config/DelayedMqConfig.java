@@ -19,7 +19,6 @@ public class DelayedMqConfig {
     @Bean
     public Queue delayQueue1(){
 
-
         return new Queue(queue_delay_1,true);
     }
 

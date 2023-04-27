@@ -47,6 +47,39 @@ public class MQProducerAckConfig implements RabbitTemplate.ConfirmCallback, Rabb
     }
 
     /**
+     * 消息没有正确到达队列时触发回调，如果正确到达队列不执行
+     *
+     * @param message
+     * @param replyCode
+     * @param replyText
+     * @param exchange
+     * @param routingKey
+     */
+    @Override
+    public void returnedMessage(Message message,int replyCode, String replyText, String exchange, String routingKey) {
+
+        System.out.println("消息主体: " + new String(message.getBody()));
+        System.out.println("应答码: " + replyCode);
+        System.out.println("描述：" + replyText);
+        System.out.println("消息使用的交换器 exchange : " + exchange);
+        System.out.println("消息使用的路由键 routing : " + routingKey);
+
+        //从redis中获取数据
+        String correlationDataId = (String) message.getMessageProperties().getHeaders().get("spring_returned_message_correlation");
+        if(!StringUtils.isEmpty(correlationDataId)){
+
+            //从redis中获取数据
+            String strJson = (String) redisTemplate.opsForValue().get(correlationDataId);
+
+            GmallCorrelationData gmallCorrelationData= JSON.parseObject(strJson, GmallCorrelationData.class);
+
+            //调用重试方法
+            this.retryMessage(gmallCorrelationData);
+
+        }
+
+    }
+    /**
      * 实现重试方法
      *
      * @param correlationData
@@ -62,6 +95,9 @@ public class MQProducerAckConfig implements RabbitTemplate.ConfirmCallback, Rabb
         } else {
             retryCount += 1;
             gmallCorrelationData.setRetryCount(retryCount);
+            //更新redis
+            redisTemplate.opsForValue().set(gmallCorrelationData.getId(), JSON.toJSONString(gmallCorrelationData));
+            System.out.println("重试次数:\t" + retryCount);
             //判断是否延迟
             if (gmallCorrelationData.isDelay()) {
                 rabbitTemplate.convertAndSend(
@@ -73,9 +109,6 @@ public class MQProducerAckConfig implements RabbitTemplate.ConfirmCallback, Rabb
                             return  message;
                         },gmallCorrelationData);
             } else {
-                //更新redis
-                redisTemplate.opsForValue().set(gmallCorrelationData.getId(), JSON.toJSONString(gmallCorrelationData));
-                System.out.println("重试次数:\t" + retryCount);
                 //重新发送
                 rabbitTemplate.convertAndSend(
                         gmallCorrelationData.getExchange(),
@@ -83,36 +116,6 @@ public class MQProducerAckConfig implements RabbitTemplate.ConfirmCallback, Rabb
                         gmallCorrelationData.getMessage(),
                         gmallCorrelationData);
             }
-        }
-    }
-
-    /**
-     * 消息没有正确到达队列时触发回调，如果正确到达队列不执行
-     *
-     * @param message
-     * @param replyCode
-     * @param replyText
-     * @param exchange
-     * @param routingKey
-     */
-    @Override
-    public void returnedMessage(Message message, int replyCode, String replyText, String exchange, String routingKey) {
-        // 反序列化对象输出
-        System.out.println("消息主体: " + new String(message.getBody()));
-        System.out.println("应答码: " + replyCode);
-        System.out.println("描述：" + replyText);
-        System.out.println("消息使用的交换器 exchange : " + exchange);
-        System.out.println("消息使用的路由键 routing : " + routingKey);
-
-        //从redis中获取数据
-        String correlationDataId = (String) message.getMessageProperties().getHeaders().get("spring_returned_message_correlation");
-        if (!StringUtils.isEmpty(correlationDataId)) {
-            String strJson = (String) redisTemplate.opsForValue().get(correlationDataId);
-
-            GmallCorrelationData gmallCorrelationData = JSON.parseObject(strJson, GmallCorrelationData.class);
-
-            //调用重试方法
-            this.retryMessage(gmallCorrelationData);
         }
     }
 }

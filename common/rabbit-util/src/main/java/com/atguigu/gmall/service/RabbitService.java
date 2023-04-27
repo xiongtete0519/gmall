@@ -20,16 +20,13 @@ public class RabbitService {
     private RedisTemplate redisTemplate;
 
     //发送延迟消息
-    public boolean sendDelayedMessage(String exchange,String routingKey,Object message,int delayTime){
+    public boolean sendDelayedMessage(String exchange, String routingKey,Object message,int delayTime){
 
-        rabbitTemplate.convertAndSend(exchange,routingKey,message,message1 -> {
-            //设置延迟时间
-            message1.getMessageProperties().setDelay(delayTime*1000);
-            return message1;
-        });
+
         //重试机制-封装对象
-        //创建实体类，封装消息信息
-        GmallCorrelationData gmallCorrelationData = new GmallCorrelationData();
+        //创建实体类封装消息信息
+        GmallCorrelationData gmallCorrelationData=new GmallCorrelationData();
+
         //设置id
         String correlationDataId = UUID.randomUUID().toString().replaceAll("-", "");
         gmallCorrelationData.setId(correlationDataId);
@@ -44,11 +41,19 @@ public class RabbitService {
         //延迟时间
         gmallCorrelationData.setDelayTime(delayTime);
 
-        //存储到Redis
-        redisTemplate.opsForValue().set(correlationDataId,JSON.toJSONString(gmallCorrelationData));
+        //存储到redis
+        redisTemplate.opsForValue().set(correlationDataId, JSON.toJSONString(gmallCorrelationData));
 
+        rabbitTemplate.convertAndSend(exchange,routingKey,message,message1 -> {
+
+            //设置延迟时间
+            message1.getMessageProperties().setDelay(delayTime*1000);
+            return message1;
+        },gmallCorrelationData);
 
         return true;
+
+
     }
 
     //发送消息封装
