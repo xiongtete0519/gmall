@@ -13,6 +13,7 @@ import com.atguigu.gmall.order.mapper.OrderDetailMapper;
 import com.atguigu.gmall.order.mapper.OrderInfoMapper;
 import com.atguigu.gmall.order.service.OrderService;
 import com.atguigu.gmall.service.RabbitService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -195,5 +196,19 @@ public class OrderServiceImpl extends ServiceImpl<OrderInfoMapper,OrderInfo> imp
         orderInfo.setProcessStatus(processStatus.name());
 
         orderInfoMapper.updateById(orderInfo);
+    }
+
+    //根据订单id查询订单信息
+    @Override
+    public OrderInfo getOrderInfoById(Long orderId) {
+        OrderInfo orderInfo = orderInfoMapper.selectById(orderId);
+        //判断
+        if(orderInfo!=null){
+            LambdaQueryWrapper<OrderDetail> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(OrderDetail::getOrderId,orderId);
+            List<OrderDetail> orderDetailList = orderDetailMapper.selectList(wrapper);
+            orderInfo.setOrderDetailList(orderDetailList);
+        }
+        return orderInfo;
     }
 }

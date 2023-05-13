@@ -29,4 +29,7 @@ public interface OrderService extends IService<OrderInfo> {
     void execExpiredOrder(Long orderId);
     //修改订单状态
     void updateOrderStatus(Long orderId, ProcessStatus closed);
+
+    //根据订单id查询订单信息
+    OrderInfo getOrderInfoById(Long orderId);
 }

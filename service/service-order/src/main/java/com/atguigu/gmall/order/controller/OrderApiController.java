@@ -51,6 +51,12 @@ public class OrderApiController {
     @Autowired
     private ThreadPoolExecutor executor;
 
+    @ApiOperation("根据订单id查询订单信息")
+    @GetMapping("/inner/getOrderInfo/{orderId}")
+    public OrderInfo getOrderInfo(@PathVariable Long orderId){
+        return orderService.getOrderInfoById(orderId);
+    }
+
     @ApiOperation("我的订单")
     @GetMapping("/auth/{page}/{limit}")
     public Result getOrderPageByUserId(@PathVariable Long page,@PathVariable Long limit,HttpServletRequest request){
