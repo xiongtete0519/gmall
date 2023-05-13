@@ -51,9 +51,11 @@ public class AlipayServiceImpl implements AlipayService {
         //对接支付宝
         AlipayTradePagePayRequest request = new AlipayTradePagePayRequest();
         //异步回调地址，仅支持http/https，公网可访问
-//        request.setNotifyUrl("");
+        System.out.println("异步回调地址:"+AlipayConfig.notify_payment_url);
+        request.setNotifyUrl(AlipayConfig.notify_payment_url);
         //同步回调地址，仅支持http/https
         request.setReturnUrl(AlipayConfig.return_payment_url);
+        System.out.println("同步回调地址:");
         /******必传参数******/
         JSONObject bizContent = new JSONObject();
         //商户订单号，商家自定义，保持唯一性

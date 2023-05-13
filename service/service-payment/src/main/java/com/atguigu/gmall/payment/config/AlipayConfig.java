@@ -26,9 +26,11 @@ public class AlipayConfig {
     private String alipay_public_key;
     //签名算法
     public static final String sign_type="RSA2";
-
+    //同步回调地址
     public static String return_payment_url;
     public static String return_order_url;
+    //异步回调地址
+    public static String notify_payment_url;
 
     @Value("${return_payment_url}")
     public void setReturn_payment_url(String return_payment_url){
@@ -40,6 +42,10 @@ public class AlipayConfig {
         AlipayConfig.return_order_url =return_order_url;
     }
 
+    @Value("${notify_payment_url}")
+    public void setNotify_payment_url(String notify_payment_url){
+        AlipayConfig.notify_payment_url =notify_payment_url;
+    }
     @Bean
     public AlipayClient alipayClient(){
         return new DefaultAlipayClient(alipay_url,

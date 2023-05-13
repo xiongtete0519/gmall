@@ -1,11 +1,14 @@
 package com.atguigu.gmall.payment.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.atguigu.gmall.payment.config.AlipayConfig;
 import com.atguigu.gmall.payment.service.AlipayService;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @Controller
 @RequestMapping("/api/payment/alipay")
@@ -30,5 +33,15 @@ public class PaymentApiController {
     public String returnCallback(){
         return "redirect:"+ AlipayConfig.return_order_url;
     }
+
+    //异步回调
+    // http://n8sa9h.natappfree.cc/api/payment/alipay/callback/notify
+    @PostMapping("/callback/notify")
+    public String notifyCallBack(@RequestParam Map<String, String> paramsMap){
+        System.out.println("============指定异步回调=====");
+        System.out.println(JSON.toJSONString(paramsMap));
+        return "success";
+    }
+
 
 }
