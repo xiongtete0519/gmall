@@ -1,5 +1,6 @@
 package com.atguigu.gmall.payment.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.atguigu.gmall.model.enums.PaymentStatus;
 import com.atguigu.gmall.model.order.OrderInfo;
 import com.atguigu.gmall.model.payment.PaymentInfo;
@@ -8,6 +9,9 @@ import com.atguigu.gmall.payment.service.PaymentService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Date;
+import java.util.Map;
 
 @Service
 @SuppressWarnings("all")
@@ -40,5 +44,36 @@ public class PaymentServiceImpl implements PaymentService {
         paymentInfo.setPaymentStatus(PaymentStatus.UNPAID.name());
         //保存支付记录
         paymentInfoMapper.insert(paymentInfo);
+    }
+
+    //查询支付记录
+    @Override
+    public PaymentInfo getPaymentInfo(String outTradeNo, String name) {
+        LambdaQueryWrapper<PaymentInfo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(PaymentInfo::getOutTradeNo,outTradeNo);
+        wrapper.eq(PaymentInfo::getPaymentType,name);
+        return paymentInfoMapper.selectOne(wrapper);
+    }
+
+    //修改支付记录状态
+    @Override
+    public void updatePaymentInfo(String outTradeNo, String name, Map<String, String> paramsMap) {
+        //查询判断
+        PaymentInfo paymentInfo1 = this.getPaymentInfo(outTradeNo, name);
+        if(paymentInfo1==null){
+            return;
+        }
+        //创建对象
+        PaymentInfo paymentInfo = new PaymentInfo();
+        paymentInfo.setTradeNo(paramsMap.get("trade_no"));
+        paymentInfo.setPaymentStatus(PaymentStatus.PAID.name());
+        paymentInfo.setCallbackTime(new Date());
+        paymentInfo.setCallbackContent(JSON.toJSONString(paramsMap));
+
+        //设置条件对象
+        LambdaQueryWrapper<PaymentInfo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(PaymentInfo::getOutTradeNo,outTradeNo);
+        wrapper.eq(PaymentInfo::getPaymentType,name);
+        paymentInfoMapper.update(paymentInfo,wrapper);
     }
 }

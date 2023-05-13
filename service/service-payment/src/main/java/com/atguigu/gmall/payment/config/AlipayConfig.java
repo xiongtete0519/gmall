@@ -12,8 +12,13 @@ public class AlipayConfig {
     @Value("${alipay_url}")
     private String alipay_url;
     //应用id
+    public static String app_id;
+
     @Value("${app_id}")
-    private String app_id;
+    public void setApp_id(String app_id){
+        AlipayConfig.app_id =app_id;
+    }
+
     //应用私钥
     @Value("${app_private_key}")
     private String app_private_key;
@@ -22,8 +27,14 @@ public class AlipayConfig {
     //字符编码集
     public static final String charset="UTF-8";
     //支付宝公钥
+    public static String alipay_public_key;
+
     @Value("${alipay_public_key}")
-    private String alipay_public_key;
+    public void setAlipay_public_key(String alipay_public_key){
+        AlipayConfig.alipay_public_key =alipay_public_key;
+    }
+
+
     //签名算法
     public static final String sign_type="RSA2";
     //同步回调地址
