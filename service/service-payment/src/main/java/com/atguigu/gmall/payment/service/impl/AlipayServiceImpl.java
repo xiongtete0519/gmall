@@ -11,8 +11,14 @@ import com.atguigu.gmall.model.order.OrderInfo;
 import com.atguigu.gmall.order.client.OrderFeignClient;
 import com.atguigu.gmall.payment.service.AlipayService;
 import com.atguigu.gmall.payment.service.PaymentService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalUnit;
 
 @Service
 @SuppressWarnings("all")
@@ -59,7 +65,13 @@ public class AlipayServiceImpl implements AlipayService {
         bizContent.put("product_code", "FAST_INSTANT_TRADE_PAY");
 
         /******可选参数******/
-        //bizContent.put("time_expire", "2022-08-01 22:00:00");
+        //设置超时时间--相对时间
+//        bizContent.put("timeout_express", "10m");
+        //设置超时时间--绝对时间
+        LocalDateTime now = LocalDateTime.now();
+        now=now.plusMinutes(10);
+        String format = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(now);
+        bizContent.put("time_expire", format);
 
         //// 商品明细信息，按需传入
         //JSONArray goodsDetail = new JSONArray();
@@ -86,4 +98,5 @@ public class AlipayServiceImpl implements AlipayService {
 
         return form;
     }
+
 }

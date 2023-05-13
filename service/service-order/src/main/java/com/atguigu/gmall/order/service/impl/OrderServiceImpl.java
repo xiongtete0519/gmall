@@ -75,7 +75,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderInfoMapper,OrderInfo> imp
         StringBuilder tradeBody=new StringBuilder();
         //订单描述
         for (OrderDetail orderDetail : orderInfo.getOrderDetailList()) {
-            tradeBody.append(orderDetail.getSkuNum()+"  ");
+            tradeBody.append(orderDetail.getSkuName()+"  ");
         }
         //设置订单描述
         if(tradeBody.toString().length()>100){
