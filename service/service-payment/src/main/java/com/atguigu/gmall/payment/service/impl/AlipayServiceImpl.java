@@ -9,6 +9,7 @@ import com.alipay.api.response.AlipayTradePagePayResponse;
 import com.atguigu.gmall.model.enums.PaymentType;
 import com.atguigu.gmall.model.order.OrderInfo;
 import com.atguigu.gmall.order.client.OrderFeignClient;
+import com.atguigu.gmall.payment.config.AlipayConfig;
 import com.atguigu.gmall.payment.service.AlipayService;
 import com.atguigu.gmall.payment.service.PaymentService;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +53,7 @@ public class AlipayServiceImpl implements AlipayService {
         //异步回调地址，仅支持http/https，公网可访问
 //        request.setNotifyUrl("");
         //同步回调地址，仅支持http/https
-//        request.setReturnUrl("");
+        request.setReturnUrl(AlipayConfig.return_payment_url);
         /******必传参数******/
         JSONObject bizContent = new JSONObject();
         //商户订单号，商家自定义，保持唯一性

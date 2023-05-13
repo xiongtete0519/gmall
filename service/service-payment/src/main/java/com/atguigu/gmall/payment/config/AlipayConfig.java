@@ -25,7 +25,20 @@ public class AlipayConfig {
     @Value("${alipay_public_key}")
     private String alipay_public_key;
     //签名算法
-   public static final String sign_type="RSA2";
+    public static final String sign_type="RSA2";
+
+    public static String return_payment_url;
+    public static String return_order_url;
+
+    @Value("${return_payment_url}")
+    public void setReturn_payment_url(String return_payment_url){
+        AlipayConfig.return_payment_url =return_payment_url;
+    }
+
+    @Value("${return_order_url}")
+    public void setReturn_order_url(String return_order_url){
+        AlipayConfig.return_order_url =return_order_url;
+    }
 
     @Bean
     public AlipayClient alipayClient(){

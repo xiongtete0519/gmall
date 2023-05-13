@@ -14,6 +14,12 @@ public class PaymentController {
     @Autowired
     private OrderFeignClient orderFeignClient;
 
+    //跳转到成功界面
+    @GetMapping("/pay/success.html")
+    public String success(){
+        return "payment/success";
+    }
+
     //显示支付页面
     @GetMapping("/pay.html")
     public String pay(Long orderId, Model model){
