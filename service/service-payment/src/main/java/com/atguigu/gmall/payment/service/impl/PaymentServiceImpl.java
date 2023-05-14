@@ -8,6 +8,7 @@ import com.atguigu.gmall.payment.mapper.PaymentInfoMapper;
 import com.atguigu.gmall.payment.service.PaymentService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -19,6 +20,9 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Autowired
     private PaymentInfoMapper paymentInfoMapper;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     //保存支付信息
     @Override
@@ -63,17 +67,22 @@ public class PaymentServiceImpl implements PaymentService {
         if(paymentInfo1==null){
             return;
         }
-        //创建对象
-        PaymentInfo paymentInfo = new PaymentInfo();
-        paymentInfo.setTradeNo(paramsMap.get("trade_no"));
-        paymentInfo.setPaymentStatus(PaymentStatus.PAID.name());
-        paymentInfo.setCallbackTime(new Date());
-        paymentInfo.setCallbackContent(JSON.toJSONString(paramsMap));
+        try {
+            //创建对象
+            PaymentInfo paymentInfo = new PaymentInfo();
+            paymentInfo.setTradeNo(paramsMap.get("trade_no"));
+            paymentInfo.setPaymentStatus(PaymentStatus.PAID.name());
+            paymentInfo.setCallbackTime(new Date());
+            paymentInfo.setCallbackContent(JSON.toJSONString(paramsMap));
 
-        //设置条件对象
-        LambdaQueryWrapper<PaymentInfo> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(PaymentInfo::getOutTradeNo,outTradeNo);
-        wrapper.eq(PaymentInfo::getPaymentType,name);
-        paymentInfoMapper.update(paymentInfo,wrapper);
+            //设置条件对象
+            LambdaQueryWrapper<PaymentInfo> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(PaymentInfo::getOutTradeNo,outTradeNo);
+            wrapper.eq(PaymentInfo::getPaymentType,name);
+            paymentInfoMapper.update(paymentInfo,wrapper);
+        } catch (Exception e) {
+            redisTemplate.delete(paramsMap.get("notify_id"));
+            e.printStackTrace();
+        }
     }
 }
