@@ -1,11 +1,13 @@
 package com.atguigu.gmall.payment.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.atguigu.gmall.constant.MqConst;
 import com.atguigu.gmall.model.enums.PaymentStatus;
 import com.atguigu.gmall.model.order.OrderInfo;
 import com.atguigu.gmall.model.payment.PaymentInfo;
 import com.atguigu.gmall.payment.mapper.PaymentInfoMapper;
 import com.atguigu.gmall.payment.service.PaymentService;
+import com.atguigu.gmall.service.RabbitService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -23,6 +25,10 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Autowired
     private RedisTemplate redisTemplate;
+
+    @Autowired
+    private RabbitService rabbitService;
+
 
     //保存支付信息
     @Override
@@ -63,8 +69,8 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public void updatePaymentInfo(String outTradeNo, String name, Map<String, String> paramsMap) {
         //查询判断
-        PaymentInfo paymentInfo1 = this.getPaymentInfo(outTradeNo, name);
-        if(paymentInfo1==null){
+        PaymentInfo paymentInfoQuery = this.getPaymentInfo(outTradeNo, name);
+        if(paymentInfoQuery==null){
             return;
         }
         try {
@@ -80,6 +86,10 @@ public class PaymentServiceImpl implements PaymentService {
             redisTemplate.delete(paramsMap.get("notify_id"));
             e.printStackTrace();
         }
+        //修改订单状态 --消息队列
+        rabbitService.sendMessage(MqConst.EXCHANGE_DIRECT_PAYMENT_PAY,
+                MqConst.ROUTING_PAYMENT_PAY,
+                paymentInfoQuery.getOrderId());
     }
 
     /**

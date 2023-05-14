@@ -2,11 +2,15 @@ package com.atguigu.gmall.order.receiver;
 
 import com.atguigu.gmall.constant.MqConst;
 import com.atguigu.gmall.model.enums.OrderStatus;
+import com.atguigu.gmall.model.enums.ProcessStatus;
 import com.atguigu.gmall.model.order.OrderInfo;
 import com.atguigu.gmall.order.service.OrderService;
 import com.rabbitmq.client.Channel;
 import lombok.SneakyThrows;
 import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.annotation.Exchange;
+import org.springframework.amqp.rabbit.annotation.Queue;
+import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -55,5 +59,32 @@ public class OrderReceiver {
         channel.basicAck(message.getMessageProperties().getDeliveryTag(),false);
 
 
+    }
+
+    @SneakyThrows
+    @RabbitListener(bindings = @QueueBinding(
+            value =@Queue(value = MqConst.QUEUE_PAYMENT_PAY,durable = "true",autoDelete = "false"),
+            exchange =@Exchange(value =MqConst.EXCHANGE_DIRECT_PAYMENT_PAY,autoDelete = "false"),
+            key ={MqConst.ROUTING_PAYMENT_PAY}
+    ))
+    public void paySuccess(Long orderId,Message message,Channel channel){
+        try {
+            //判断
+            if(orderId!=null){
+                //查询状态
+                OrderInfo orderInfo = orderService.getById(orderId);
+                if(orderInfo!=null&&"UNPAID".equals(orderInfo.getOrderStatus())){
+                    //修改状态
+                    orderService.updateOrderStatus(orderId, ProcessStatus.PAID);
+                }
+            }
+        } catch (Exception e) {
+            //日志，短信通知
+            e.printStackTrace();
+        }
+
+
+        //手动确认
+        channel.basicAck(message.getMessageProperties().getDeliveryTag(),false);
     }
 }
