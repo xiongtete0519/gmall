@@ -14,4 +14,5 @@ public interface PaymentService {
 
     //修改支付记录状态
     void updatePaymentInfo(String outTradeNo, String name, Map<String, String> paramsMap);
+    void updatePaymentInfoStatus(String outTradeNo, String name, PaymentInfo paymentInfo);
 }

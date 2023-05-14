@@ -74,15 +74,25 @@ public class PaymentServiceImpl implements PaymentService {
             paymentInfo.setPaymentStatus(PaymentStatus.PAID.name());
             paymentInfo.setCallbackTime(new Date());
             paymentInfo.setCallbackContent(JSON.toJSONString(paramsMap));
+            updatePaymentInfoStatus(outTradeNo, name, paymentInfo);
 
-            //设置条件对象
-            LambdaQueryWrapper<PaymentInfo> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(PaymentInfo::getOutTradeNo,outTradeNo);
-            wrapper.eq(PaymentInfo::getPaymentType,name);
-            paymentInfoMapper.update(paymentInfo,wrapper);
         } catch (Exception e) {
             redisTemplate.delete(paramsMap.get("notify_id"));
             e.printStackTrace();
         }
+    }
+
+    /**
+     * 修改支付记录状态
+     * @param outTradeNo
+     * @param name
+     * @param paymentInfo
+     */
+    public void updatePaymentInfoStatus(String outTradeNo, String name, PaymentInfo paymentInfo) {
+        //设置条件对象
+        LambdaQueryWrapper<PaymentInfo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(PaymentInfo::getOutTradeNo,outTradeNo);
+        wrapper.eq(PaymentInfo::getPaymentType,name);
+        paymentInfoMapper.update(paymentInfo,wrapper);
     }
 }

@@ -3,6 +3,7 @@ package com.atguigu.gmall.payment.controller;
 import com.alibaba.fastjson.JSON;
 import com.alipay.api.AlipayApiException;
 import com.alipay.api.internal.util.AlipaySignature;
+import com.atguigu.gmall.common.result.Result;
 import com.atguigu.gmall.model.enums.PaymentType;
 import com.atguigu.gmall.model.payment.PaymentInfo;
 import com.atguigu.gmall.payment.config.AlipayConfig;
@@ -101,6 +102,15 @@ public class PaymentApiController {
         }
 
         return "failure";
+    }
+
+    @ApiOperation("发起退款")
+    @GetMapping("/refund/{orderId}")
+    @ResponseBody
+    public Result refund(@PathVariable Long orderId){
+        boolean flag = alipayService.refund(orderId);
+
+        return Result.ok(flag);
     }
 
 

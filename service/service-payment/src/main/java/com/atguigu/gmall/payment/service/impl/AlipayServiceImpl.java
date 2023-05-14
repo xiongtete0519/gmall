@@ -5,14 +5,19 @@ import com.alipay.api.AlipayApiException;
 import com.alipay.api.AlipayClient;
 import com.alipay.api.DefaultAlipayClient;
 import com.alipay.api.request.AlipayTradePagePayRequest;
+import com.alipay.api.request.AlipayTradeRefundRequest;
 import com.alipay.api.response.AlipayTradePagePayResponse;
+import com.alipay.api.response.AlipayTradeRefundResponse;
+import com.atguigu.gmall.model.enums.PaymentStatus;
 import com.atguigu.gmall.model.enums.PaymentType;
 import com.atguigu.gmall.model.order.OrderInfo;
+import com.atguigu.gmall.model.payment.PaymentInfo;
 import com.atguigu.gmall.order.client.OrderFeignClient;
 import com.atguigu.gmall.payment.config.AlipayConfig;
 import com.atguigu.gmall.payment.service.AlipayService;
 import com.atguigu.gmall.payment.service.PaymentService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.filefilter.FalseFileFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -100,6 +105,51 @@ public class AlipayServiceImpl implements AlipayService {
         }
 
         return form;
+    }
+
+    //发起退款
+    @Override
+    public boolean refund(Long orderId) {
+        //根据orderId查询订单对象
+        OrderInfo orderInfo = orderFeignClient.getOrderInfo(orderId);
+        //判断
+        if(orderInfo==null||!"PAID".equals(orderInfo.getOrderStatus())){
+            return false;
+        }
+
+        AlipayTradeRefundRequest request = new AlipayTradeRefundRequest();
+        JSONObject bizContent = new JSONObject();
+        bizContent.put("out_trade_no",orderInfo.getOutTradeNo());
+        bizContent.put("refund_amount", 0.01);
+        bizContent.put("refund_reason", "不想要了，帮忙退一下!!!");
+
+        //// 返回参数选项，按需传入
+        //JSONArray queryOptions = new JSONArray();
+        //queryOptions.add("refund_detail_item_list");
+        //bizContent.put("query_options", queryOptions);
+
+        request.setBizContent(bizContent.toString());
+        AlipayTradeRefundResponse response = null;
+        try {
+            response = alipayClient.execute(request);
+        } catch (AlipayApiException e) {
+            e.printStackTrace();
+        }
+        if(response.isSuccess()){
+            System.out.println("调用成功");
+            //订单  已支付--关闭
+            PaymentInfo paymentInfo=new PaymentInfo();
+            paymentInfo.setPaymentStatus(PaymentStatus.CLOSED.name());
+            //支付记录
+            paymentService.updatePaymentInfoStatus(orderInfo.getOutTradeNo(),PaymentType.ALIPAY.name(),paymentInfo);
+
+            //订单状态--发送mq消息
+
+            return true;
+        } else {
+            System.out.println("调用失败");
+            return false;
+        }
     }
 
 }
