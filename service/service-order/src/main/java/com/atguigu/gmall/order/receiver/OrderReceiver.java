@@ -72,10 +72,13 @@ public class OrderReceiver {
             //判断
             if(orderId!=null){
                 //查询状态
-                OrderInfo orderInfo = orderService.getById(orderId);
+                OrderInfo orderInfo = orderService.getOrderInfoById(orderId);
                 if(orderInfo!=null&&"UNPAID".equals(orderInfo.getOrderStatus())){
                     //修改状态
                     orderService.updateOrderStatus(orderId, ProcessStatus.PAID);
+
+                    //发送消息，扣减库存
+                    orderService.sendOrderStatus(orderInfo);
                 }
             }
         } catch (Exception e) {

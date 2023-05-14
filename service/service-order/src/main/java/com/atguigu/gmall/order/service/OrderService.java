@@ -32,4 +32,7 @@ public interface OrderService extends IService<OrderInfo> {
 
     //根据订单id查询订单信息
     OrderInfo getOrderInfoById(Long orderId);
+
+    //发送消息，扣减库存
+    void sendOrderStatus(OrderInfo orderInfo);
 }

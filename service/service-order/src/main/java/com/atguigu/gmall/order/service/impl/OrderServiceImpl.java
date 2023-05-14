@@ -1,5 +1,6 @@
 package com.atguigu.gmall.order.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.atguigu.gmall.common.constant.RedisConst;
 import com.atguigu.gmall.common.util.AuthContextHolder;
 import com.atguigu.gmall.common.util.HttpClientUtil;
@@ -22,13 +23,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @SuppressWarnings("all")
@@ -210,5 +210,54 @@ public class OrderServiceImpl extends ServiceImpl<OrderInfoMapper,OrderInfo> imp
             orderInfo.setOrderDetailList(orderDetailList);
         }
         return orderInfo;
+    }
+
+    //发送消息，扣减库存
+    @Override
+    public void sendOrderStatus(OrderInfo orderInfo) {
+        //修改订单流程状态
+        this.updateOrderStatus(orderInfo.getId(),ProcessStatus.NOTIFIED_WARE);
+
+        //封装数据对象
+        String strJSON=this.initWareOrder(orderInfo);
+
+        //发送消息
+        rabbitService.sendMessage(MqConst.EXCHANGE_DIRECT_WARE_STOCK,
+                MqConst.ROUTING_WARE_STOCK,
+                strJSON);
+    }
+
+    //封装数据
+    private String initWareOrder(OrderInfo orderInfo) {
+        Map<String,Object> resultMap = new HashMap<>();
+        resultMap.put("orderId",orderInfo.getId());
+        resultMap.put("consignee",orderInfo.getConsignee());
+        resultMap.put("consigneeTel",orderInfo.getConsigneeTel());
+        resultMap.put("orderComment",orderInfo.getOrderComment());
+        resultMap.put("orderBody",orderInfo.getTradeBody());
+        resultMap.put("deliveryAddress",orderInfo.getDeliveryAddress());
+        resultMap.put("paymentWay","2");
+
+        List<OrderDetail> orderDetailList = orderInfo.getOrderDetailList();
+        //判断
+        if(!CollectionUtils.isEmpty(orderDetailList)){
+//            List<OrderDetail> listMap = orderDetailList.stream().map(orderDetail -> {
+//                Map<String, Object> orderDetailMap = new HashMap<>();
+//                orderDetailMap.put("skuId", orderDetail.getSkuId());
+//                orderDetailMap.put("skuNum", orderDetail.getSkuNum());
+//                orderDetailMap.put("skuName", orderDetail.getSkuName());
+//                return orderDetail;
+//            }).collect(Collectors.toList());
+            List<Map<String, Object>> listMap = orderDetailList.stream().map(orderDetail -> {
+                Map<String, Object> orderDetailMap = new HashMap<>();
+                orderDetailMap.put("skuId", orderDetail.getSkuId());
+                orderDetailMap.put("skuNum", orderDetail.getSkuNum());
+                orderDetailMap.put("skuName", orderDetail.getSkuName());
+                return orderDetailMap;
+            }).collect(Collectors.toList());
+            //封装订单明细
+            resultMap.put("details",listMap);
+        }
+        return JSON.toJSONString(resultMap);
     }
 }
